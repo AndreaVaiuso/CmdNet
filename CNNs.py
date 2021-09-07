@@ -1,7 +1,6 @@
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Input, Dense, Conv2D, MaxPooling2D, Flatten, Activation, AveragePooling2D, MaxPool2D
-from tensorflow.keras.optimizers import Adamax, Adam
-from tensorflow.keras import optimizers
+from tensorflow.keras.optimizers import Adamax, Adam, SGD
 from tensorflow.keras.layers import BatchNormalization
 from tensorflow.keras.layers import Dropout
 import keras.losses
@@ -10,6 +9,7 @@ import math
 import os
 import time
 
+# input-> RGB images 150x150
 def model_mAlexNet():
     mAlexNet = Sequential()
     # Layer 1
@@ -35,12 +35,12 @@ def model_mAlexNet():
     mAlexNet.add(Dense(2, activation = 'softmax'))
     
     ##Funzione di ottimizzazione di discesa lungo il gradiente (SGD)
-    sgd = optimizers.SGD(learning_rate=0.01, decay=5e-4, momentum=0.9, nesterov=True)
     
-    mAlexNet.compile(optimizer =sgd, loss = 'binary_crossentropy', metrics = ['accuracy'])
+    mAlexNet.compile(optimizer = SGD(learning_rate=0.01, decay=5e-4, momentum=0.9, nesterov=True), loss = 'binary_crossentropy', metrics = ['accuracy'])
     print(mAlexNet.summary())
     return mAlexNet
 
+# input-> RGB images 32x32
 def model_AlexNet():
     AlexNet = Sequential()
     # Layer 1
@@ -95,10 +95,11 @@ def model_AlexNet():
     AlexNet.add(BatchNormalization())
     AlexNet.add(Activation('softmax'))
 
-    AlexNet.compile(optimizer ='adam', loss = 'binary_crossentropy', metrics = ['accuracy'])
+    AlexNet.compile(optimizer = Adam(), loss = 'binary_crossentropy', metrics = ['accuracy'])
     print(AlexNet.summary())
     return AlexNet
 
+# input-> Black and white images 32x32
 def model_leNet():
     leNet = Sequential()
     # Layer 1
@@ -119,10 +120,11 @@ def model_leNet():
     # Layer 5
     leNet.add(Dense(units=2, activation = 'softmax'))
 
-    leNet.compile(optimizer ='adam', loss = 'binary_crossentropy', metrics = ['accuracy'])
+    leNet.compile(optimizer = Adam(), loss = 'binary_crossentropy', metrics = ['accuracy'])
     print(leNet.summary())
     return leNet
 
+# input-> RGB images 224x224
 def model_VGG16():
     vgg16 = Sequential()
     # Layer 1
@@ -179,7 +181,6 @@ def model_VGG16():
     # Layer 16
     vgg16.add(Dense(units=2, activation="softmax"))
 
-    opt = Adam(learning_rate=0.001)
-    vgg16.compile(optimizer = opt, loss = 'categorical_crossentropy', metrics = ['accuracy'])
+    vgg16.compile(optimizer = Adam(learning_rate=0.001), loss = 'categorical_crossentropy', metrics = ['accuracy'])
     print(vgg16.summary())
     return vgg16
