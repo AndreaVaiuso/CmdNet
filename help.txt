@@ -1,0 +1,46 @@
+_________________________________________________________________________________
+
+COMMAND			USAGE
+_________________________________________________________________________________
+
+batch [num]		Show batch size for training. If [num] is specified you
+			can change the value of batch variable.
+dataset/ds [fpath]	Show database selected. If [fpath] is specified you can
+			change the dataset to be loaded. Dataset specification
+			file must be formatted in this way:
+			BASE_PATH
+			LABELS_FILE_PATH
+			VALIDATION_FILE_PATH
+			TEST_FILE_PATH
+epoch [num]		Show epochs for training. If [num] is specified you can
+			change the value of epoch variable.
+help			Shows this help.
+load [fpath]		Load a saved .kears network contained in NETWORK folder.
+			If you not specify [fpath] you can view .keras files av-
+			ailable.
+new [name]		Create new instance for network. You can chose from this
+			list:
+			malexnet
+			alexnet
+			lenet
+			vgg16
+plot/plt [a/l]		Plot [a] for accuracy values, [l] for loss values.
+quit/exit		Exit program.
+reshape [0/1]		Allow reshaping input image to fit shape requested from
+			network.
+save [name]		Save network as .keras file to NETWORK folder. If name
+			is not specified, file will be saved in the following
+			format: gg_mm_yyyy(hh_mm_ss.ssssss)_modelname.keras
+seed [num]		Select a seed for random number generator and shufflers
+shuffle [0/1]		Show shuffle policy for training. If [0/1] is specified
+			you can change the value of the variable.
+summary - sum		Show a detailed summary of your dataset and network loa-
+			ded.
+test [fpath]		Test network with test set selected. You can select by
+			specifying [fpath] a test set to be tested. A confusion
+			matrix will be produced as output
+train [vsplit]		Train network with selected dataset. If [vsplit] is spe-
+			cified you will train your network using validation split
+			value
+_________________________________________________________________________________
+

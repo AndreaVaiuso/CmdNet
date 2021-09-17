@@ -1,0 +1,88 @@
+Dataset selected: TEST.ds
+Network: sequential_3-malexnet
+Network trained: not_trained
+Batch size: 64
+Epoch(s): 11
+Random seed: 49
+Shuffle: Yes
+Reshape image: No
+Image shape requested: (150x150x3)
+
+RUN(s) SIZE: 3
+MODEL: malexnet
+DATASET: TEST.ds
+VALIDATION SET: TEST.ds
+TEST SET: TEST.ds
+
+BATCH SIZE: 64
+EPOCH(s): 11
+SHUFFLE: Yes
+RESHAPE POLICY: No
+
+DATASET: DATASET/DTEST/LABELS/labels.txt
+VALIDATION SET: DATASET/DTEST/LABELS/validation.txt
+TEST SET: DATASET/DTEST/LABELS/test.txt
+
+ --- Run <1> --- seed: 0 --- 
+
+P: 14
+N: 13
+TN: 11
+TP: 11
+FN: 3
+FP: 2
+
+Accuracy: 81.48148148148148%
+F1 score: 0.8148148148148148
+
+TNR: 0.8461538461538461
+TPR: 0.7857142857142857
+FNR: 0.21428571428571427
+FPR: 0.15384615384615385
+
+Execution time: 0.0d:0.0h:0.0m:0.15368986129760742s
+ --- Run <2> --- seed: 1 --- 
+
+P: 12
+N: 15
+TN: 12
+TP: 10
+FN: 2
+FP: 3
+
+Accuracy: 81.48148148148148%
+F1 score: 0.8
+
+TNR: 0.8
+TPR: 0.8333333333333334
+FNR: 0.16666666666666666
+FPR: 0.2
+
+Execution time: 0.0d:0.0h:0.0m:0.14815616607666016s
+ --- Run <3> --- seed: 2 --- 
+
+P: 18
+N: 9
+TN: 6
+TP: 10
+FN: 8
+FP: 3
+
+Accuracy: 59.25925925925925%
+F1 score: 0.6451612903225806
+
+TNR: 0.6666666666666666
+TPR: 0.5555555555555556
+FNR: 0.4444444444444444
+FPR: 0.3333333333333333
+
+Execution time: 0.0d:0.0h:0.0m:0.13412880897521973s
+ -----------------END---------------- 
+Mean values: 
+Accuracy: 74.07407407407408%
+F1 score: 0.7533253683791318
+
+TNR: 0.7709401709401709
+TPR: 0.724867724867725
+FNR: 0.2751322751322751
+FPR: 0.22905982905982905
