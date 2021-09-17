@@ -1,3 +1,5 @@
+VERSION = "1.0.1"
+
 from utilities import isBoolean, listFileInDir, summarizeAccuracy, summarizeLoss, qry, toBool, imgpad, secToTime
 from keras.backend import int_shape
 from CNNs import model_VGG16, model_leNet, model_mAlexNet
@@ -17,6 +19,17 @@ import time
 import sys
 import socket
 import cmd
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 class Dataset:
     def  __init__(self,data,label):
@@ -90,6 +103,10 @@ time_callback = TimeHistory()
 dynamicTrain = DynamicLR(everyepoch,lrf)
 reshaper = Reshaper("skip",cv2.INTER_CUBIC)
 
+def printErr(*str):
+    print(bcolors.FAIL + "".join(str) + bcolors.ENDC)
+
+
 def setDynamicLr():
     global dynamicTrain
     dynamicTrain = DynamicLR(everyepoch,lrf)
@@ -105,12 +122,12 @@ def setDataset(pathToFile):
     global LABELS_TESTSET
     lines = []
     if not os.path.isfile(os.path.join(ABSPATH,pathToFile)):
-        print("File not found at: ", os.path.join(ABSPATH,pathToFile))
+        printErr("File not found at: ", os.path.join(ABSPATH,pathToFile))
         return 0
     with open(os.path.join(ABSPATH,pathToFile),"r") as file:
         lines = file.readlines()
     if len(lines) != 4:
-        print("Error on reading dataset specified on file: ", pathToFile)
+        printErr("Error on reading dataset specified on file: ", pathToFile)
         return 0
     BASEPATH = lines[0].rstrip("\n")
     LABELS_DATA = lines[1].rstrip("\n")
@@ -137,7 +154,7 @@ def getDataset(pathToFile,basepath,verbose = 1,overwrite=0):
     file_converted = 0
     lines = []
     if not os.path.isfile(os.path.join(ABSPATH,pathToFile)):
-        print("File not found at: ", os.path.join(ABSPATH,pathToFile))
+        printErr("File not found at: ", os.path.join(ABSPATH,pathToFile))
         return 0
     with open(os.path.join(ABSPATH,pathToFile),"r") as file:
         lines = file.readlines()
@@ -285,12 +302,11 @@ def getSummary():
         "Image shape requested: (" + str(ROW) + "x" + str(COL) + "x" + str(CH) + ")\n"
     return smry
 
-
 import cmd
 commands = []
 
 class CmdParse(cmd.Cmd):
-    prompt = " (cmdnet) " + ENV_NAME + " >> "
+    prompt = bcolors.BOLD + bcolors.OKCYAN + " (cmdnet) " + bcolors.OKGREEN + ENV_NAME + " >> " + bcolors.ENDC + "\033[0m"
     
     def do_listall(self, line):
         print(commands)
@@ -309,10 +325,10 @@ class CmdParse(cmd.Cmd):
                 if os.path.isfile("./DATASET/"+ds_name):
                     getModel("./DATASET/"+ds_name,ds_name)
                 else: 
-                    print("Cannot open file: ", ds_name)
+                    printErr("Cannot open file: ", ds_name)
             else:
                 check = setDataset("DATASET/"+dset_selected)
-                if not check: print("Unable to load dataset: ", "./DATASET",dset_selected)
+                if not check: printErr("Unable to load dataset: ", "./DATASET",dset_selected)
                 else:
                     dsname=dset_selected
                     print("Dataset selected: ", "./DATASET/"+dset_selected)
@@ -329,14 +345,14 @@ class CmdParse(cmd.Cmd):
                 bsize = int(batch)
                 print("Batch size changed to: ", bsize)
             else:
-                print("Error on parsing value as integer: ", batch)
+                printErr("Error on parsing value as integer: ", batch)
         else: print("Batch size: ", bsize)
     def do_seed(self,sd):
         global rseed
         if sd:
             if isInt(sd):
                 rseed = int(sd)
-                print("Batch size changed to: ", rseed)
+                printErr("Batch size changed to: ", rseed)
             else:
                 print("Error on parsing value as integer: ", sd)
         else: print("Seed: ", rseed)
@@ -347,7 +363,7 @@ class CmdParse(cmd.Cmd):
                 epochs = int(ep)
                 print("Epoch(s) changed to: ", epochs)
             else:
-                print("Error on parsing value as integer: ", ep)
+                printErr("Error on parsing value as integer: ", ep)
         else: print("Epoch(s): ", epochs)
     def do_shuffle(self,shuf):
         global shuffle
@@ -363,7 +379,7 @@ class CmdParse(cmd.Cmd):
                     sh = "true"
                 print("Shuffle changed to: ", sh)
             else:
-                print("Error on parsing value as boolean: ", shuf)
+                printErr("Error on parsing value as boolean: ", shuf)
         else:
             if shuffle: print("Shuffle: true")
             else: print("Shuffle: false")
@@ -437,17 +453,20 @@ class CmdParse(cmd.Cmd):
                     val, idx = min((val, idx) for (idx, val) in enumerate(history.history['val_loss']))
                     model_trained = 1
                     print("Train completed. Best validation loss value found on epoch: ", str(idx+1))
-                else: print("Error while loading dataset")
+                else: 
+                    printErr("Error while loading dataset")
+                    return
             else:
-                print("Error on parsing value as a float: ", vspl)
+                printErr("Error on parsing value as a float: ", vspl)
+                return
         else:
             ds = getDataset(LABELS_DATA,BASEPATH)
             if ds == -1:
-                print("Dataset empty")
+                printErr("Dataset empty")
                 return
             vs = getDataset(LABELS_VALID,BASEPATH)
             if vs == -1:
-                print("Dataset empty")
+                printErr("Dataset empty")
                 return
             history = train(model,bsize,shuffle,epochs,ds,vs)
             val, idx = min((val, idx) for (idx, val) in enumerate(history.history['val_loss']))
@@ -464,14 +483,14 @@ class CmdParse(cmd.Cmd):
         if testfile:
             testSet = getDataset(testfile,BASEPATH)
             if testSet == 0 or testSet == -1: 
-                print("Error while loading test set: ",testfile)
+                printErr("Error while loading test set: ",testfile)
                 return
             test(model,testSet)
         else:
             if qry(LABELS_TESTSET + " will be used. It\'s ok?"):
                 testSet = getDataset(LABELS_TESTSET,BASEPATH)
                 if testSet == 0 or testSet == -1: 
-                    print("Error while loading test set: ",testfile)
+                    printErr("Error while loading test set: ",testfile)
                     return
                 test(model,testSet)
             else: return
@@ -489,7 +508,7 @@ class CmdParse(cmd.Cmd):
                     x = "true"
                 print("Dynamic learning rate changed to: ", x)
             else:
-                print("Error on parsing value as boolean: ", lr)
+                printErr("Error on parsing value as boolean: ", lr)
         else:
             if dlr: print("Dynamic learning rate: true")
             else: print("Dynamic learning rate: false")
@@ -534,9 +553,11 @@ class CmdParse(cmd.Cmd):
                     getModel("./NETWORK/"+mod_name,mod_name)
                     print(model.input_shape)
                 else: 
-                    print("Cannot open file: ", mod_name)
+                    printErr("Cannot open file: ", mod_name)
+                    return
             else: 
-                print("Cannot open file: ", path)
+                printErr("Cannot open file: ", path)
+                return
         else:
             print("Available models: ")
             listFileInDir("./NETWORK",".keras",prnt=1)
@@ -577,12 +598,12 @@ class CmdParse(cmd.Cmd):
         if line:
             pth = os.path.join(ABSPATH,"RUN/",line)
             if not os.path.isfile(pth):
-                print("Cannot open .run file: ", pth)
+                printErr("Cannot open .run file: ", pth)
                 return
             with open(pth,"r") as file:
                 lines = file.readlines()
             if len(lines) != 5:
-                print("File: ", pth," is not well formatted")
+                printErr("File: ", pth," is not well formatted")
                 return
             
             inseed = int(lines[0].rstrip("\n"))
@@ -675,6 +696,8 @@ class CmdParse(cmd.Cmd):
         sys.exit()
     def do_exit(self,line):
         self.do_quit()
+    def do_version(self,line):
+        print("Version: " + VERSION)
     def default(self, line):
         print("Unknow command: ", line,"\nType \'help\' for commands")
         commands.append(line)
@@ -683,7 +706,7 @@ def main():
     os.system("clear")
     setSeed(rseed)
     parser = CmdParse()
-    parser.cmdloop(intro="CMDNET 1.0 by Andrea Vaiuso")
+    parser.cmdloop(intro="CMDNET " + VERSION + " by Andrea Vaiuso")
 
 if __name__ == "__main__":
     main()
