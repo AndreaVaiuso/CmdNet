@@ -1,4 +1,4 @@
-VERSION = "1.0.1"
+VERSION = "1.0.2"
 
 from utilities import isBoolean, listFileInDir, summarizeAccuracy, summarizeLoss, qry, toBool, imgpad, secToTime
 from keras.backend import int_shape
@@ -231,8 +231,8 @@ def train(model,bsize,shuffle,epochs,trainData, validData):
     print("Training is starting with input shape: ", trainData.data.shape)
     print()
     time_callback.reset()
-    if dlr: history = model.fit(x=trainData.data,y=trainData.label,validation_data=(validData.data,validData.label), batch_size=bsize, shuffle=shuffle, verbose=1, epochs=epochs,callbacks=[time_callback,early_stopping,dynamicTrain])
-    else: history = model.fit(x=trainData.data,y=trainData.label,validation_data=(validData.data,validData.label), batch_size=bsize, shuffle=shuffle, verbose=1, epochs=epochs,callbacks=[time_callback,early_stopping])
+    if dlr: history = model.fit(x=trainData.data,y=trainData.label,validation_data=(validData.data,validData.label), batch_size=bsize, shuffle=shuffle, verbose=1, epochs=epochs,callbacks=[time_callback,dynamicTrain])
+    else: history = model.fit(x=trainData.data,y=trainData.label,validation_data=(validData.data,validData.label), batch_size=bsize, shuffle=shuffle, verbose=1, epochs=epochs,callbacks=[time_callback])
     training_time = sum(time_callback.times)
     return history
 
