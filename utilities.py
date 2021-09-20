@@ -17,7 +17,7 @@ def secToTime(n):
     minutes = n // 60
     n %= 60
     seconds = math.ceil(n)
-    return str(day)+"d:"+str(hour)+"h:"+str(minutes)+"m:"+str(seconds)+"s"
+    return str(math.ceil(day))+"d:"+str(math.ceil(hour))+"h:"+str(math.ceil(minutes))+"m:"+str(seconds)+"s"
 
 def imgpad(im,h,w):
   old_size = im.shape[:2] # old_size is in (height, width) format

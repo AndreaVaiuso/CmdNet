@@ -1,4 +1,4 @@
-VERSION = "1.0.2"
+VERSION = "1.0.3"
 
 from utilities import isBoolean, listFileInDir, summarizeAccuracy, summarizeLoss, qry, toBool, imgpad, secToTime
 from keras.backend import int_shape
@@ -640,14 +640,7 @@ class CmdParse(cmd.Cmd):
             elif reshaper.mod == "interpolate": resh="Interpolation: " + interpmod[reshaper.val]
             
             smry = "RUN(s) SIZE: " + str(runlength) + "\n"
-            smry += "MODEL: " + str(netmodel) + "\n"
-            smry += "DATASET: " + str(dstrain) + "\n"
-            smry += "VALIDATION SET: " + str(dstrain)  + "\n"
-            smry += "TEST SET: " + str(dstest)  + "\n\n"
-            smry += "BATCH SIZE: " + str(bsize) + "\n"
-            smry += "EPOCH(s): " + str(epochs) + "\n"
-            smry += "SHUFFLE: " + str(shuf) + "\n"
-            smry += "RESHAPE POLICY: " + str(resh) + "\n"
+            smry += getSummary()
             printBorder(smry)
             if not qry("Proceed with run? "):
                 return
@@ -671,7 +664,8 @@ class CmdParse(cmd.Cmd):
                 setSeed(seedval)
                 self.do_new(netmodel)
                 history = train(model,bsize,shuffle,epochs,dset,vset)
-                results += "Training time:" + str(secToTime(training_time)) + "\n"
+                results += "Training time: " + str(secToTime(training_time)) + "\n"
+                print("Training time: " + str(secToTime(training_time)))
                 print("----------------- RUN: " + str(runindex) + "/" + str(runlength) + " -----------------")
                 x, values = test(model,tset,savequery=0)
                 results += x + "\n"
