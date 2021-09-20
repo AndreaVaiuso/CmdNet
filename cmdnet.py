@@ -1,4 +1,4 @@
-VERSION = "1.0.3.2"
+VERSION = "1.0.3.3"
 
 from utilities import isBoolean, listFileInDir, summarizeAccuracy, summarizeLoss, qry, toBool, imgpad, secToTime
 from keras.backend import int_shape
@@ -659,6 +659,8 @@ class CmdParse(cmd.Cmd):
             results += "TEST SET: " + LABELS_TESTSET  + "\n\n"
             runindex = 1
             testresvalues = []
+            avtimetr = 0
+            t_start = time.time()
             for seedval in range(inseed,finseed):
                 results += " --- Run <"+str(runindex)+"> --- seed: " + str(seedval) + " --- \n"
                 print("----------------- RUN: " + str(runindex) + "/" + str(runlength) + " -----------------")
@@ -666,6 +668,7 @@ class CmdParse(cmd.Cmd):
                 self.do_new(netmodel)
                 history = train(model,bsize,shuffle,epochs,dset,vset)
                 results += "Training time: " + str(secToTime(training_time)) + "\n"
+                avtimetr += training_time
                 print("Training time: " + str(secToTime(training_time)))
                 print("----------------- RUN: " + str(runindex) + "/" + str(runlength) + " -----------------")
                 x, values = test(model,tset,savequery=0)
@@ -673,6 +676,7 @@ class CmdParse(cmd.Cmd):
                 testresvalues.append(values)
                 runindex += 1
             results += " -----------------END---------------- \n"
+            avtimetr = avtimetr / runlength
             acc, f1, tpr, tnr, fnr, fpr = 0,0,0,0,0,0
             for rval in testresvalues:
                 _acc, _f1, _tpr, _tnr, _fnr, _fpr = rval
@@ -688,7 +692,10 @@ class CmdParse(cmd.Cmd):
             tnr /= len(testresvalues)
             fnr /= len(testresvalues)
             fpr /= len(testresvalues)
+            t_end = time.time()
+            results += "Total time: " + str(secToTime(t_end-t_start))
             results += "Mean values: \n"
+            results += "Training time: " + str(secToTime(avtimetr)) + " \n"
             _res = "Accuracy: " + str(acc*100) + "%\n" +\
             "F1 score: " + str(f1) + "\n" +\
             "\n" +\
