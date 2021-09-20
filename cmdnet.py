@@ -231,8 +231,10 @@ def train(model,bsize,shuffle,epochs,trainData, validData):
     print("Training is starting with input shape: ", trainData.data.shape)
     print()
     time_callback.reset()
-    if dlr: history = model.fit(x=trainData.data,y=trainData.label,validation_data=(validData.data,validData.label), batch_size=bsize, shuffle=shuffle, verbose=1, epochs=epochs,callbacks=[time_callback,dynamicTrain])
-    else: history = model.fit(x=trainData.data,y=trainData.label,validation_data=(validData.data,validData.label), batch_size=bsize, shuffle=shuffle, verbose=1, epochs=epochs,callbacks=[time_callback])
+    callbacks = [time_callback]
+    if dlr: callbacks.append(dynamicTrain)
+    if early_stopping: callbacks.append(early_stopping)
+    history = model.fit(x=trainData.data,y=trainData.label,validation_data=(validData.data,validData.label), batch_size=bsize, shuffle=shuffle, verbose=1, epochs=epochs,callbacks=callbacks)
     training_time = sum(time_callback.times)
     return history
 
@@ -365,6 +367,24 @@ class CmdParse(cmd.Cmd):
             else:
                 printErr("Error on parsing value as integer: ", ep)
         else: print("Epoch(s): ", epochs)
+    def do_earlystop(self,line):
+        global early_stopping
+        if line:
+            line = toBool(line)
+            if line != -1:
+                es = int(line)
+                if es == 0: 
+                    early_stopping = None
+                    es = "false"
+                else:
+                    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=4,restore_best_weights=True)
+                    es = "true"
+                print("Early stopping changed to: ", es)
+            else:
+                printErr("Error on parsing value as boolean: ", line)
+        else:
+            if early_stopping: print("Shuffle: true")
+            else: print("Shuffle: false")
     def do_shuffle(self,shuf):
         global shuffle
         if shuf:
@@ -651,6 +671,7 @@ class CmdParse(cmd.Cmd):
                 setSeed(seedval)
                 self.do_new(netmodel)
                 history = train(model,bsize,shuffle,epochs,dset,vset)
+                results += "Training time:" + str(secToTime(training_time)) + "\n"
                 print("----------------- RUN: " + str(runindex) + "/" + str(runlength) + " -----------------")
                 x, values = test(model,tset,savequery=0)
                 results += x + "\n"

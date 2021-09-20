@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 from skimage import transform
 import os
 import cv2
+import math
 
 def toBool(val):
   if val == "1" or val.lower() == "true" or val.lower() == "y" or val.lower() == "yes" or val.lower() == "t": return 1
@@ -15,7 +16,7 @@ def secToTime(n):
     n %= 3600
     minutes = n // 60
     n %= 60
-    seconds = n
+    seconds = math.ceil(n)
     return str(day)+"d:"+str(hour)+"h:"+str(minutes)+"m:"+str(seconds)+"s"
 
 def imgpad(im,h,w):
