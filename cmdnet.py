@@ -1,4 +1,4 @@
-VERSION = "1.0.3.1"
+VERSION = "1.0.3.2"
 
 from utilities import isBoolean, listFileInDir, summarizeAccuracy, summarizeLoss, qry, toBool, imgpad, secToTime
 from keras.backend import int_shape
@@ -220,7 +220,7 @@ def saveData(res,prefix="TEST_RESULT"):
             os.makedirs(folder)
         dateTimeObj = datetime.now()
         timestampStr = dateTimeObj.strftime("%d_%b_%Y(%H_%M_%S.%f)")
-        filename = prefix+"_"+mname+"_"+timestampStr+".txt"
+        filename = prefix+"_"+mname+"_"+timestampStr+".log"
         with open(folder+"/"+filename, "x") as text_file:
             text_file.write(getSummary()+"\n"+res)
             print("Results saved as: ", filename)
@@ -701,7 +701,7 @@ class CmdParse(cmd.Cmd):
             if qry("Save run results? "):
                 dateTimeObj = datetime.now()
                 timestampStr = dateTimeObj.strftime("%d_%b_%Y(%H_%M_%S.%f)")
-                filename = "RUN_"+mname+"_"+timestampStr+".txt"
+                filename = "RUN_"+mname+"_"+timestampStr+".log"
                 with open("RUN/RESULT/"+filename, "x") as text_file:
                     text_file.write(getSummary()+"\n"+results)
                     print("Results saved as: ", filename)
