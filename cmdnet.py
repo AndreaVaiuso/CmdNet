@@ -1,4 +1,4 @@
-VERSION = "1.0.3"
+VERSION = "1.0.3.1"
 
 from utilities import isBoolean, listFileInDir, summarizeAccuracy, summarizeLoss, qry, toBool, imgpad, secToTime
 from keras.backend import int_shape
@@ -277,7 +277,7 @@ def test(model,testSet,savequery=1):
         "FNR: " + str(fnr) + "\n" +\
         "FPR: " + str(fpr) + "\n" 
     tim = secToTime(t_end-t_start)
-    results = "\n"+res+"\nExecution time: " + str(tim)
+    results = "\n"+res+"\nTest execution time: " + str(tim)
     printBorder(getSummary()+results)
     if not savequery:
         return results, (acc, f1, tpr, tnr, fnr, fpr)
@@ -652,7 +652,8 @@ class CmdParse(cmd.Cmd):
             self.do_dataset(dstest)
             tset = getDataset(LABELS_TESTSET,BASEPATH)
 
-            results = smry + "\n"
+            results = 
+             + "\n"
             results += "DATASET: " + LABELS_DATA + "\n"
             results += "VALIDATION SET: " + LABELS_VALID  + "\n"
             results += "TEST SET: " + LABELS_TESTSET  + "\n\n"
@@ -661,7 +662,7 @@ class CmdParse(cmd.Cmd):
             for seedval in range(inseed,finseed):
                 results += " --- Run <"+str(runindex)+"> --- seed: " + str(seedval) + " --- \n"
                 print("----------------- RUN: " + str(runindex) + "/" + str(runlength) + " -----------------")
-                setSeed(seedval)
+                self.do_seed(seedval)
                 self.do_new(netmodel)
                 history = train(model,bsize,shuffle,epochs,dset,vset)
                 results += "Training time: " + str(secToTime(training_time)) + "\n"
