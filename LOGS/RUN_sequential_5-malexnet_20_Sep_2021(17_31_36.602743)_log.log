@@ -1,0 +1,633 @@
+ (cmdnet) MacBook-Pro-di-Andrea-2.local >> multirun run2.run
+****************************************
+* RUN(s) SIZE: 5                       *
+* MODEL: malexnet                      *
+* DATASET: CNRP.ds                     *
+* VALIDATION SET: CNRP.ds              *
+* TEST SET: CNRP.ds                    *
+*                                      *
+* BATCH SIZE: 64                       *
+* EPOCH(s): 6                          *
+* SHUFFLE: Yes                         *
+* RESHAPE POLICY: Interpolation: cubic *
+*                                      *
+****************************************
+Proceed with run?  (y/n): y
+2021-09-20 15:02:37.104545: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+Model: "sequential"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+conv2d (Conv2D)              (None, 38, 38, 16)        5824      
+_________________________________________________________________
+activation (Activation)      (None, 38, 38, 16)        0         
+_________________________________________________________________
+max_pooling2d (MaxPooling2D) (None, 18, 18, 16)        0         
+_________________________________________________________________
+conv2d_1 (Conv2D)            (None, 18, 18, 20)        8020      
+_________________________________________________________________
+activation_1 (Activation)    (None, 18, 18, 20)        0         
+_________________________________________________________________
+max_pooling2d_1 (MaxPooling2 (None, 8, 8, 20)          0         
+_________________________________________________________________
+conv2d_2 (Conv2D)            (None, 8, 8, 30)          5430      
+_________________________________________________________________
+activation_2 (Activation)    (None, 8, 8, 30)          0         
+_________________________________________________________________
+max_pooling2d_2 (MaxPooling2 (None, 3, 3, 30)          0         
+_________________________________________________________________
+flatten (Flatten)            (None, 270)               0         
+_________________________________________________________________
+dense (Dense)                (None, 48)                13008     
+_________________________________________________________________
+dense_1 (Dense)              (None, 2)                 98        
+=================================================================
+Total params: 32,380
+Trainable params: 32,380
+Non-trainable params: 0
+_________________________________________________________________
+None
+Dataset selected:  ./DATASET/CNRP.ds
+Loading data set defined in:  DATASET/CNRP/LABELS/train.txt
+Total file count:  94493
+> 100.0% [██████████████████████████████] loaded: 94493/94493 - skipped: 0 - converted: 2061
+
+
+***************************
+* Total file count: 94493 *
+* File loaded: 94493      *
+* File skipped: 0         *
+* File converted: 2061    *
+***************************
+
+Converting data to numpy array: 
+Conversion completed
+Data shape:  (94493, 150, 150, 3)
+Labels shape:  (94493, 2)
+Loading data set defined in:  DATASET/CNRP/LABELS/val.txt
+Total file count:  18647
+> 100.0% [██████████████████████████████] loaded: 18647/18647 - skipped: 0 - converted: 406
+
+
+***************************
+* Total file count: 18647 *
+* File loaded: 18647      *
+* File skipped: 0         *
+* File converted: 406     *
+***************************
+
+Converting data to numpy array: 
+Conversion completed
+Data shape:  (18647, 150, 150, 3)
+Labels shape:  (18647, 2)
+Dataset selected:  ./DATASET/CNRP.ds
+Loading data set defined in:  DATASET/CNRP/LABELS/test.txt
+Total file count:  31825
+> 100.0% [██████████████████████████████] loaded: 31825/31825 - skipped: 0 - converted: 696
+
+
+***************************
+* Total file count: 31825 *
+* File loaded: 31825      *
+* File skipped: 0         *
+* File converted: 696     *
+***************************
+
+Converting data to numpy array: 
+Conversion completed
+Data shape:  (31825, 150, 150, 3)
+Labels shape:  (31825, 2)
+----------------- RUN: 1/5 -----------------
+Model: "sequential_1"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+conv2d_3 (Conv2D)            (None, 38, 38, 16)        5824      
+_________________________________________________________________
+activation_3 (Activation)    (None, 38, 38, 16)        0         
+_________________________________________________________________
+max_pooling2d_3 (MaxPooling2 (None, 18, 18, 16)        0         
+_________________________________________________________________
+conv2d_4 (Conv2D)            (None, 18, 18, 20)        8020      
+_________________________________________________________________
+activation_4 (Activation)    (None, 18, 18, 20)        0         
+_________________________________________________________________
+max_pooling2d_4 (MaxPooling2 (None, 8, 8, 20)          0         
+_________________________________________________________________
+conv2d_5 (Conv2D)            (None, 8, 8, 30)          5430      
+_________________________________________________________________
+activation_5 (Activation)    (None, 8, 8, 30)          0         
+_________________________________________________________________
+max_pooling2d_5 (MaxPooling2 (None, 3, 3, 30)          0         
+_________________________________________________________________
+flatten_1 (Flatten)          (None, 270)               0         
+_________________________________________________________________
+dense_2 (Dense)              (None, 48)                13008     
+_________________________________________________________________
+dense_3 (Dense)              (None, 2)                 98        
+=================================================================
+Total params: 32,380
+Trainable params: 32,380
+Non-trainable params: 0
+_________________________________________________________________
+None
+
+Training is starting with input shape:  (94493, 150, 150, 3)
+
+2021-09-20 15:05:58.966581: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
+Epoch 1/6
+1477/1477 [==============================] - 278s 187ms/step - loss: 0.2056 - accuracy: 0.9512 - val_loss: 0.0934 - val_accuracy: 0.9716
+Epoch 2/6
+1477/1477 [==============================] - 287s 194ms/step - loss: 0.0867 - accuracy: 0.9712 - val_loss: 0.1031 - val_accuracy: 0.9711
+Epoch 3/6
+1477/1477 [==============================] - 281s 190ms/step - loss: 0.0733 - accuracy: 0.9754 - val_loss: 0.0826 - val_accuracy: 0.9764
+Epoch 4/6
+1477/1477 [==============================] - 283s 192ms/step - loss: 0.0684 - accuracy: 0.9768 - val_loss: 0.0828 - val_accuracy: 0.9763
+Epoch 5/6
+1477/1477 [==============================] - 286s 193ms/step - loss: 0.0645 - accuracy: 0.9784 - val_loss: 0.0844 - val_accuracy: 0.9760
+Epoch 6/6
+1477/1477 [==============================] - 284s 192ms/step - loss: 0.0626 - accuracy: 0.9791 - val_loss: 0.0854 - val_accuracy: 0.9763
+----------------- RUN: 1/5 -----------------
+Testing: 
+995/995 [==============================] - 30s 29ms/step
+Test done
+*****************************************************
+* Dataset selected: CNRP.ds                         *
+* Network: sequential_1-malexnet                    *
+* Network trained: not_trained                      *
+* Batch size: 64                                    *
+* Epoch(s): 6                                       *
+* Random seed: 49                                   *
+* Shuffle: Yes                                      *
+* Reshape image: Interpolation: cubic               *
+* Dynamic learning rate: lr * 0.75 every 2 epoch(s) *
+* Image shape requested: (150x150x3)                *
+*                                                   *
+* P: 18139                                          *
+* N: 13686                                          *
+* TN: 13319                                         *
+* TP: 17909                                         *
+* FN: 230                                           *
+* FP: 367                                           *
+*                                                   *
+* Accuracy: 98.12411626080126%                      *
+* F1 score: 0.9836056570094741                      *
+*                                                   *
+* TNR: 0.973184275902382                            *
+* TPR: 0.9873201389271735                           *
+* FNR: 0.012679861072826506                         *
+* FPR: 0.026815724097618003                         *
+*                                                   *
+* Execution time: 0.0d:0.0h:0.0m:31s                *
+*****************************************************
+----------------- RUN: 2/5 -----------------
+Model: "sequential_2"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+conv2d_6 (Conv2D)            (None, 38, 38, 16)        5824      
+_________________________________________________________________
+activation_6 (Activation)    (None, 38, 38, 16)        0         
+_________________________________________________________________
+max_pooling2d_6 (MaxPooling2 (None, 18, 18, 16)        0         
+_________________________________________________________________
+conv2d_7 (Conv2D)            (None, 18, 18, 20)        8020      
+_________________________________________________________________
+activation_7 (Activation)    (None, 18, 18, 20)        0         
+_________________________________________________________________
+max_pooling2d_7 (MaxPooling2 (None, 8, 8, 20)          0         
+_________________________________________________________________
+conv2d_8 (Conv2D)            (None, 8, 8, 30)          5430      
+_________________________________________________________________
+activation_8 (Activation)    (None, 8, 8, 30)          0         
+_________________________________________________________________
+max_pooling2d_8 (MaxPooling2 (None, 3, 3, 30)          0         
+_________________________________________________________________
+flatten_2 (Flatten)          (None, 270)               0         
+_________________________________________________________________
+dense_4 (Dense)              (None, 48)                13008     
+_________________________________________________________________
+dense_5 (Dense)              (None, 2)                 98        
+=================================================================
+Total params: 32,380
+Trainable params: 32,380
+Non-trainable params: 0
+_________________________________________________________________
+None
+
+Training is starting with input shape:  (94493, 150, 150, 3)
+
+Epoch 1/6
+1477/1477 [==============================] - 287s 193ms/step - loss: 0.2954 - accuracy: 0.9154 - val_loss: 0.1778 - val_accuracy: 0.9467
+Epoch 2/6
+1477/1477 [==============================] - 271s 183ms/step - loss: 0.1595 - accuracy: 0.9499 - val_loss: 0.1518 - val_accuracy: 0.9551
+Epoch 3/6
+1477/1477 [==============================] - 282s 191ms/step - loss: 0.1370 - accuracy: 0.9569 - val_loss: 0.1389 - val_accuracy: 0.9594
+Epoch 4/6
+1477/1477 [==============================] - 279s 189ms/step - loss: 0.1261 - accuracy: 0.9600 - val_loss: 0.1347 - val_accuracy: 0.9598
+Epoch 5/6
+1477/1477 [==============================] - 282s 191ms/step - loss: 0.1192 - accuracy: 0.9616 - val_loss: 0.1276 - val_accuracy: 0.9626
+Epoch 6/6
+1477/1477 [==============================] - 292s 198ms/step - loss: 0.1146 - accuracy: 0.9630 - val_loss: 0.1208 - val_accuracy: 0.9647
+----------------- RUN: 2/5 -----------------
+Testing: 
+995/995 [==============================] - 31s 31ms/step
+Test done
+*****************************************************
+* Dataset selected: CNRP.ds                         *
+* Network: sequential_2-malexnet                    *
+* Network trained: not_trained                      *
+* Batch size: 64                                    *
+* Epoch(s): 6                                       *
+* Random seed: 49                                   *
+* Shuffle: Yes                                      *
+* Reshape image: Interpolation: cubic               *
+* Dynamic learning rate: lr * 0.75 every 2 epoch(s) *
+* Image shape requested: (150x150x3)                *
+*                                                   *
+* P: 18268                                          *
+* N: 13557                                          *
+* TN: 13044                                         *
+* TP: 17763                                         *
+* FN: 505                                           *
+* FP: 513                                           *
+*                                                   *
+* Accuracy: 96.8012568735271%                       *
+* F1 score: 0.972143169877408                       *
+*                                                   *
+* TNR: 0.9621597698605886                           *
+* TPR: 0.9723560324063937                           *
+* FNR: 0.027643967593606305                         *
+* FPR: 0.037840230139411374                         *
+*                                                   *
+* Execution time: 0.0d:0.0h:0.0m:42s                *
+*****************************************************
+----------------- RUN: 3/5 -----------------
+Model: "sequential_3"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+conv2d_9 (Conv2D)            (None, 38, 38, 16)        5824      
+_________________________________________________________________
+activation_9 (Activation)    (None, 38, 38, 16)        0         
+_________________________________________________________________
+max_pooling2d_9 (MaxPooling2 (None, 18, 18, 16)        0         
+_________________________________________________________________
+conv2d_10 (Conv2D)           (None, 18, 18, 20)        8020      
+_________________________________________________________________
+activation_10 (Activation)   (None, 18, 18, 20)        0         
+_________________________________________________________________
+max_pooling2d_10 (MaxPooling (None, 8, 8, 20)          0         
+_________________________________________________________________
+conv2d_11 (Conv2D)           (None, 8, 8, 30)          5430      
+_________________________________________________________________
+activation_11 (Activation)   (None, 8, 8, 30)          0         
+_________________________________________________________________
+max_pooling2d_11 (MaxPooling (None, 3, 3, 30)          0         
+_________________________________________________________________
+flatten_3 (Flatten)          (None, 270)               0         
+_________________________________________________________________
+dense_6 (Dense)              (None, 48)                13008     
+_________________________________________________________________
+dense_7 (Dense)              (None, 2)                 98        
+=================================================================
+Total params: 32,380
+Trainable params: 32,380
+Non-trainable params: 0
+_________________________________________________________________
+None
+
+Training is starting with input shape:  (94493, 150, 150, 3)
+
+Epoch 1/6
+1477/1477 [==============================] - 298s 201ms/step - loss: 0.7282 - accuracy: 0.8637 - val_loss: 0.3404 - val_accuracy: 0.9323
+Epoch 2/6
+1477/1477 [==============================] - 285s 193ms/step - loss: 0.3124 - accuracy: 0.9281 - val_loss: 0.2805 - val_accuracy: 0.9367
+Epoch 3/6
+1477/1477 [==============================] - 277s 187ms/step - loss: 0.2684 - accuracy: 0.9348 - val_loss: 0.2524 - val_accuracy: 0.9406
+Epoch 4/6
+1477/1477 [==============================] - 279s 189ms/step - loss: 0.2474 - accuracy: 0.9376 - val_loss: 0.2299 - val_accuracy: 0.9439
+Epoch 5/6
+1477/1477 [==============================] - 290s 196ms/step - loss: 0.2330 - accuracy: 0.9403 - val_loss: 0.2222 - val_accuracy: 0.9459
+Epoch 6/6
+1477/1477 [==============================] - 284s 192ms/step - loss: 0.2227 - accuracy: 0.9416 - val_loss: 0.2257 - val_accuracy: 0.9444
+----------------- RUN: 3/5 -----------------
+Testing: 
+995/995 [==============================] - 33s 33ms/step
+Test done
+*****************************************************
+* Dataset selected: CNRP.ds                         *
+* Network: sequential_3-malexnet                    *
+* Network trained: not_trained                      *
+* Batch size: 64                                    *
+* Epoch(s): 6                                       *
+* Random seed: 49                                   *
+* Shuffle: Yes                                      *
+* Reshape image: Interpolation: cubic               *
+* Dynamic learning rate: lr * 0.75 every 2 epoch(s) *
+* Image shape requested: (150x150x3)                *
+*                                                   *
+* P: 18060                                          *
+* N: 13765                                          *
+* TN: 12858                                         *
+* TP: 17369                                         *
+* FN: 691                                           *
+* FP: 907                                           *
+*                                                   *
+* Accuracy: 94.97879025923017%                      *
+* F1 score: 0.9560215763980625                      *
+*                                                   *
+* TNR: 0.9341082455503088                           *
+* TPR: 0.9617386489479512                           *
+* FNR: 0.038261351052048725                         *
+* FPR: 0.06589175444969124                          *
+*                                                   *
+* Execution time: 0.0d:0.0h:0.0m:34s                *
+*****************************************************
+----------------- RUN: 4/5 -----------------
+Model: "sequential_4"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+conv2d_12 (Conv2D)           (None, 38, 38, 16)        5824      
+_________________________________________________________________
+activation_12 (Activation)   (None, 38, 38, 16)        0         
+_________________________________________________________________
+max_pooling2d_12 (MaxPooling (None, 18, 18, 16)        0         
+_________________________________________________________________
+conv2d_13 (Conv2D)           (None, 18, 18, 20)        8020      
+_________________________________________________________________
+activation_13 (Activation)   (None, 18, 18, 20)        0         
+_________________________________________________________________
+max_pooling2d_13 (MaxPooling (None, 8, 8, 20)          0         
+_________________________________________________________________
+conv2d_14 (Conv2D)           (None, 8, 8, 30)          5430      
+_________________________________________________________________
+activation_14 (Activation)   (None, 8, 8, 30)          0         
+_________________________________________________________________
+max_pooling2d_14 (MaxPooling (None, 3, 3, 30)          0         
+_________________________________________________________________
+flatten_4 (Flatten)          (None, 270)               0         
+_________________________________________________________________
+dense_8 (Dense)              (None, 48)                13008     
+_________________________________________________________________
+dense_9 (Dense)              (None, 2)                 98        
+=================================================================
+Total params: 32,380
+Trainable params: 32,380
+Non-trainable params: 0
+_________________________________________________________________
+None
+
+Training is starting with input shape:  (94493, 150, 150, 3)
+
+Epoch 1/6
+1477/1477 [==============================] - 300s 203ms/step - loss: 0.8749 - accuracy: 0.7592 - val_loss: 0.5731 - val_accuracy: 0.8561
+Epoch 2/6
+1477/1477 [==============================] - 282s 191ms/step - loss: 0.4380 - accuracy: 0.8857 - val_loss: 0.3873 - val_accuracy: 0.8989
+Epoch 3/6
+1477/1477 [==============================] - 293s 198ms/step - loss: 0.3339 - accuracy: 0.9106 - val_loss: 0.3167 - val_accuracy: 0.9147
+Epoch 4/6
+1477/1477 [==============================] - 282s 191ms/step - loss: 0.2913 - accuracy: 0.9211 - val_loss: 0.2787 - val_accuracy: 0.9262
+Epoch 5/6
+1477/1477 [==============================] - 315s 213ms/step - loss: 0.2686 - accuracy: 0.9264 - val_loss: 0.2694 - val_accuracy: 0.9278
+Epoch 6/6
+1477/1477 [==============================] - 287s 194ms/step - loss: 0.2550 - accuracy: 0.9293 - val_loss: 0.2589 - val_accuracy: 0.9309
+----------------- RUN: 4/5 -----------------
+Testing: 
+995/995 [==============================] - 35s 35ms/step
+Test done
+*****************************************************
+* Dataset selected: CNRP.ds                         *
+* Network: sequential_4-malexnet                    *
+* Network trained: not_trained                      *
+* Batch size: 64                                    *
+* Epoch(s): 6                                       *
+* Random seed: 49                                   *
+* Shuffle: Yes                                      *
+* Reshape image: Interpolation: cubic               *
+* Dynamic learning rate: lr * 0.75 every 2 epoch(s) *
+* Image shape requested: (150x150x3)                *
+*                                                   *
+* P: 18069                                          *
+* N: 13756                                          *
+* TN: 12647                                         *
+* TP: 17167                                         *
+* FN: 902                                           *
+* FP: 1109                                          *
+*                                                   *
+* Accuracy: 93.68106834249804%                      *
+* F1 score: 0.9446691429357545                      *
+*                                                   *
+* TNR: 0.919380633905205                            *
+* TPR: 0.9500802479384581                           *
+* FNR: 0.04991975206154187                          *
+* FPR: 0.080619366094795                            *
+*                                                   *
+* Execution time: 0.0d:0.0h:0.0m:36s                *
+*****************************************************
+----------------- RUN: 5/5 -----------------
+Model: "sequential_5"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+conv2d_15 (Conv2D)           (None, 38, 38, 16)        5824      
+_________________________________________________________________
+activation_15 (Activation)   (None, 38, 38, 16)        0         
+_________________________________________________________________
+max_pooling2d_15 (MaxPooling (None, 18, 18, 16)        0         
+_________________________________________________________________
+conv2d_16 (Conv2D)           (None, 18, 18, 20)        8020      
+_________________________________________________________________
+activation_16 (Activation)   (None, 18, 18, 20)        0         
+_________________________________________________________________
+max_pooling2d_16 (MaxPooling (None, 8, 8, 20)          0         
+_________________________________________________________________
+conv2d_17 (Conv2D)           (None, 8, 8, 30)          5430      
+_________________________________________________________________
+activation_17 (Activation)   (None, 8, 8, 30)          0         
+_________________________________________________________________
+max_pooling2d_17 (MaxPooling (None, 3, 3, 30)          0         
+_________________________________________________________________
+flatten_5 (Flatten)          (None, 270)               0         
+_________________________________________________________________
+dense_10 (Dense)             (None, 48)                13008     
+_________________________________________________________________
+dense_11 (Dense)             (None, 2)                 98        
+=================================================================
+Total params: 32,380
+Trainable params: 32,380
+Non-trainable params: 0
+_________________________________________________________________
+None
+
+Training is starting with input shape:  (94493, 150, 150, 3)
+
+Epoch 1/6
+1477/1477 [==============================] - 295s 199ms/step - loss: 32.3743 - accuracy: 0.4972 - val_loss: 18.3594 - val_accuracy: 0.7126
+Epoch 2/6
+1477/1477 [==============================] - 254s 172ms/step - loss: 13.2975 - accuracy: 0.5014 - val_loss: 6.1861 - val_accuracy: 0.7143
+Epoch 3/6
+1477/1477 [==============================] - 275s 186ms/step - loss: 5.1444 - accuracy: 0.4969 - val_loss: 2.4438 - val_accuracy: 0.6641
+Epoch 4/6
+1477/1477 [==============================] - 287s 194ms/step - loss: 1.4928 - accuracy: 0.6225 - val_loss: 1.1137 - val_accuracy: 0.7392
+Epoch 5/6
+1477/1477 [==============================] - 258s 175ms/step - loss: 0.8196 - accuracy: 0.7890 - val_loss: 0.8261 - val_accuracy: 0.8036
+Epoch 6/6
+1477/1477 [==============================] - 287s 194ms/step - loss: 0.6608 - accuracy: 0.8316 - val_loss: 0.6799 - val_accuracy: 0.8322
+----------------- RUN: 5/5 -----------------
+Testing: 
+995/995 [==============================] - 32s 31ms/step
+Test done
+*****************************************************
+* Dataset selected: CNRP.ds                         *
+* Network: sequential_5-malexnet                    *
+* Network trained: not_trained                      *
+* Batch size: 64                                    *
+* Epoch(s): 6                                       *
+* Random seed: 49                                   *
+* Shuffle: Yes                                      *
+* Reshape image: Interpolation: cubic               *
+* Dynamic learning rate: lr * 0.75 every 2 epoch(s) *
+* Image shape requested: (150x150x3)                *
+*                                                   *
+* P: 18086                                          *
+* N: 13739                                          *
+* TN: 11003                                         *
+* TP: 15540                                         *
+* FN: 2546                                          *
+* FP: 2736                                          *
+*                                                   *
+* Accuracy: 83.40298507462687%                      *
+* F1 score: 0.8547384632308453                      *
+*                                                   *
+* TNR: 0.8008588689133125                           *
+* TPR: 0.8592281322569943                           *
+* FNR: 0.14077186774300565                          *
+* FPR: 0.19914113108668755                          *
+*                                                   *
+* Execution time: 0.0d:0.0h:0.0m:42s                *
+*****************************************************
+RUN(s) SIZE: 5
+MODEL: malexnet
+DATASET: CNRP.ds
+VALIDATION SET: CNRP.ds
+TEST SET: CNRP.ds
+
+BATCH SIZE: 64
+EPOCH(s): 6
+SHUFFLE: Yes
+RESHAPE POLICY: Interpolation: cubic
+
+DATASET: DATASET/CNRP/LABELS/train.txt
+VALIDATION SET: DATASET/CNRP/LABELS/val.txt
+TEST SET: DATASET/CNRP/LABELS/test.txt
+
+ --- Run <1> --- seed: 0 --- 
+Training time:0.0d:0.0h:28.0m:20s
+
+P: 18139
+N: 13686
+TN: 13319
+TP: 17909
+FN: 230
+FP: 367
+
+Accuracy: 98.12411626080126%
+F1 score: 0.9836056570094741
+
+TNR: 0.973184275902382
+TPR: 0.9873201389271735
+FNR: 0.012679861072826506
+FPR: 0.026815724097618003
+
+Execution time: 0.0d:0.0h:0.0m:31s
+ --- Run <2> --- seed: 1 --- 
+Training time:0.0d:0.0h:28.0m:13s
+
+P: 18268
+N: 13557
+TN: 13044
+TP: 17763
+FN: 505
+FP: 513
+
+Accuracy: 96.8012568735271%
+F1 score: 0.972143169877408
+
+TNR: 0.9621597698605886
+TPR: 0.9723560324063937
+FNR: 0.027643967593606305
+FPR: 0.037840230139411374
+
+Execution time: 0.0d:0.0h:0.0m:42s
+ --- Run <3> --- seed: 2 --- 
+Training time:0.0d:0.0h:28.0m:34s
+
+P: 18060
+N: 13765
+TN: 12858
+TP: 17369
+FN: 691
+FP: 907
+
+Accuracy: 94.97879025923017%
+F1 score: 0.9560215763980625
+
+TNR: 0.9341082455503088
+TPR: 0.9617386489479512
+FNR: 0.038261351052048725
+FPR: 0.06589175444969124
+
+Execution time: 0.0d:0.0h:0.0m:34s
+ --- Run <4> --- seed: 3 --- 
+Training time:0.0d:0.0h:29.0m:19s
+
+P: 18069
+N: 13756
+TN: 12647
+TP: 17167
+FN: 902
+FP: 1109
+
+Accuracy: 93.68106834249804%
+F1 score: 0.9446691429357545
+
+TNR: 0.919380633905205
+TPR: 0.9500802479384581
+FNR: 0.04991975206154187
+FPR: 0.080619366094795
+
+Execution time: 0.0d:0.0h:0.0m:36s
+ --- Run <5> --- seed: 4 --- 
+Training time:0.0d:0.0h:27.0m:37s
+
+P: 18086
+N: 13739
+TN: 11003
+TP: 15540
+FN: 2546
+FP: 2736
+
+Accuracy: 83.40298507462687%
+F1 score: 0.8547384632308453
+
+TNR: 0.8008588689133125
+TPR: 0.8592281322569943
+FNR: 0.14077186774300565
+FPR: 0.19914113108668755
+
+Execution time: 0.0d:0.0h:0.0m:42s
+ -----------------END---------------- 
+Mean values: 
+Accuracy: 93.39764336213669%
+F1 score: 0.942235601890309
+
+TNR: 0.9179383588263594
+TPR: 0.9461446400953942
+FNR: 0.05385535990460581
+FPR: 0.08206164117364063
+
+Save run results?  (y/n): y
+Results saved as:  RUN_sequential_5-malexnet_20_Sep_2021(17_31_36.602743).txt

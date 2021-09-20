@@ -1,0 +1,129 @@
+Dataset selected: CNRP.ds
+Network: sequential_5-malexnet
+Network trained: not_trained
+Batch size: 64
+Epoch(s): 6
+Shuffle: Yes
+Reshape image: Interpolation: cubic
+Dynamic learning rate: lr * 0.75 every 2 epoch(s)
+Image shape requested: (150x150x3)
+
+RUN(s) SIZE: 5
+MODEL: malexnet
+DATASET: CNRP.ds
+VALIDATION SET: CNRP.ds
+TEST SET: CNRP.ds
+
+BATCH SIZE: 64
+EPOCH(s): 6
+SHUFFLE: Yes
+RESHAPE POLICY: Interpolation: cubic
+
+DATASET: DATASET/CNRP/LABELS/train.txt
+VALIDATION SET: DATASET/CNRP/LABELS/val.txt
+TEST SET: DATASET/CNRP/LABELS/test.txt
+
+ --- Run <1> --- seed: 0 --- 
+Training time:0.0d:0.0h:28.0m:20s
+
+P: 18139
+N: 13686
+TN: 13319
+TP: 17909
+FN: 230
+FP: 367
+
+Accuracy: 98.12411626080126%
+F1 score: 0.9836056570094741
+
+TNR: 0.973184275902382
+TPR: 0.9873201389271735
+FNR: 0.012679861072826506
+FPR: 0.026815724097618003
+
+Execution time: 0.0d:0.0h:0.0m:31s
+ --- Run <2> --- seed: 1 --- 
+Training time:0.0d:0.0h:28.0m:13s
+
+P: 18268
+N: 13557
+TN: 13044
+TP: 17763
+FN: 505
+FP: 513
+
+Accuracy: 96.8012568735271%
+F1 score: 0.972143169877408
+
+TNR: 0.9621597698605886
+TPR: 0.9723560324063937
+FNR: 0.027643967593606305
+FPR: 0.037840230139411374
+
+Execution time: 0.0d:0.0h:0.0m:42s
+ --- Run <3> --- seed: 2 --- 
+Training time:0.0d:0.0h:28.0m:34s
+
+P: 18060
+N: 13765
+TN: 12858
+TP: 17369
+FN: 691
+FP: 907
+
+Accuracy: 94.97879025923017%
+F1 score: 0.9560215763980625
+
+TNR: 0.9341082455503088
+TPR: 0.9617386489479512
+FNR: 0.038261351052048725
+FPR: 0.06589175444969124
+
+Execution time: 0.0d:0.0h:0.0m:34s
+ --- Run <4> --- seed: 3 --- 
+Training time:0.0d:0.0h:29.0m:19s
+
+P: 18069
+N: 13756
+TN: 12647
+TP: 17167
+FN: 902
+FP: 1109
+
+Accuracy: 93.68106834249804%
+F1 score: 0.9446691429357545
+
+TNR: 0.919380633905205
+TPR: 0.9500802479384581
+FNR: 0.04991975206154187
+FPR: 0.080619366094795
+
+Execution time: 0.0d:0.0h:0.0m:36s
+ --- Run <5> --- seed: 4 --- 
+Training time:0.0d:0.0h:27.0m:37s
+
+P: 18086
+N: 13739
+TN: 11003
+TP: 15540
+FN: 2546
+FP: 2736
+
+Accuracy: 83.40298507462687%
+F1 score: 0.8547384632308453
+
+TNR: 0.8008588689133125
+TPR: 0.8592281322569943
+FNR: 0.14077186774300565
+FPR: 0.19914113108668755
+
+Execution time: 0.0d:0.0h:0.0m:42s
+ -----------------END---------------- 
+Mean values: 
+Accuracy: 93.39764336213669%
+F1 score: 0.942235601890309
+
+TNR: 0.9179383588263594
+TPR: 0.9461446400953942
+FNR: 0.05385535990460581
+FPR: 0.08206164117364063
