@@ -383,8 +383,8 @@ class CmdParse(cmd.Cmd):
             else:
                 printErr("Error on parsing value as boolean: ", line)
         else:
-            if early_stopping: print("Shuffle: true")
-            else: print("Shuffle: false")
+            if early_stopping: print("Early stopping: true")
+            else: print("Early stopping: false")
     def do_shuffle(self,shuf):
         global shuffle
         if shuf:
@@ -530,8 +530,8 @@ class CmdParse(cmd.Cmd):
             else:
                 printErr("Error on parsing value as boolean: ", lr)
         else:
-            if dlr: print("Dynamic learning rate: true")
-            else: print("Dynamic learning rate: false")
+            dlrstr = "lr * " + str(lrf) + " every " + str(everyepoch) + " epoch(s)" if dlr else "No"
+            print("Dynamic learning rate: " + dlrstr)
     def do_save(self,fname):
         global mname, model, history, training_time
         if model is None:
