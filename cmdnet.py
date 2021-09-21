@@ -1,4 +1,4 @@
-VERSION = "1.0.4.0"
+VERSION = "1.0.4.1"
 
 from utilities import isBoolean, listFileInDir, summarizeAccuracy, summarizeLoss, qry, toBool, imgpad, secToTime
 from keras.backend import int_shape
@@ -549,23 +549,32 @@ class CmdParse(cmd.Cmd):
                 test(model,testSet)
             else: return
     def do_dlr(self,lr):
-        global dlr
+        global dlr, lrf, everyepoch
+        lrl = lr.split()
         if lr:
-            lr = toBool(lr)
-            if lr != -1:
-                x = int(lr)
-                if x == 0: 
-                    dlr = 0
-                    x = "false"
-                else:
-                    dlr = 1
-                    x = "true"
-                print("Dynamic learning rate changed to: ", x)
+            if len(lrl)==1: 
+                lr = toBool(lr)
+                if lr != -1:
+                    x = int(lr)
+                    if x == 0: 
+                        dlr = 0
+                        x = "false"
+                    else:
+                        dlr = 1
+                        x = "true"
+                    print("Dynamic learning rate changed to: ", x)
             else:
-                printErr("Error on parsing value as boolean: " + str(lr))
-        else:
-            dlrstr = "lr * " + str(lrf) + " every " + str(everyepoch) + " epoch(s)" if dlr else "No"
-            print("Dynamic learning rate: " + dlrstr)
+                if len(lrl)!=2:
+                    printErr("Dynamic learning rate format: dlr 'factor' 'epochs'")
+                    return
+                if not isFloat(lrl[0]) or not isInt(lrl[1]):
+                    printErr("Dynamic learning rate format: dlr 'factor(float)' 'epochs(int)'")
+                    return
+                lrf = float(lrl[0])
+                everyepoch = int(lrl[1])
+                setDynamicLr()
+        dlrstr = "lr * " + str(lrf) + " every " + str(everyepoch) + " epoch(s)" if dlr else "No"
+        print("Dynamic learning rate: " + dlrstr)
     def do_save(self,fname):
         global mname, model, history, training_time
         if model is None:
