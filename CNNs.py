@@ -11,7 +11,7 @@ from tensorflow.keras.layers import Dropout
 #opt = Adadelta()
 #opt = RMSprop()
 #opt = Adam(learning_rate=0.001)
-opt = SGD(learning_rate=0.0008, decay=5e-4, momentum=0.9, nesterov=True, clipnorm=1.0)
+opt = SGD(learning_rate=0.01, decay=5e-4, momentum=0.9, nesterov=True, clipnorm=1.0)
 
 # input-> RGB images 150x150
 def model_mAlexNet(verbose=1):

@@ -1,4 +1,4 @@
-VERSION = "1.0.3.3"
+VERSION = "1.0.4.0"
 
 from utilities import isBoolean, listFileInDir, summarizeAccuracy, summarizeLoss, qry, toBool, imgpad, secToTime
 from keras.backend import int_shape
@@ -19,6 +19,7 @@ import time
 import sys
 import socket
 import cmd
+import random
 
 class bcolors:
     HEADER = '\033[95m'
@@ -62,6 +63,8 @@ class DynamicLR(keras.callbacks.Callback):
             self.epochCount = 0
             K.set_value(model.optimizer.learning_rate, model.optimizer.learning_rate*self.val)
 
+def setLr(lr):
+    K.set_value(model.optimizer.learning_rate, lr)
 
 interpmod = {
     cv2.INTER_LINEAR : "linear",
@@ -86,13 +89,17 @@ LABELS_TESTSET = ""
 dsname = "None"
 history = -1
 bsize = 64
-rseed = 49
+rseed = 4
 epochs = 11
 shuffle = 1
 model = None
 model_trained = 0
 mname = "None"
 training_time = 0
+lrate = 0.0008
+
+first = 1
+original_weights = []
 
 dlr = 1
 everyepoch = 2
@@ -103,8 +110,8 @@ time_callback = TimeHistory()
 dynamicTrain = DynamicLR(everyepoch,lrf)
 reshaper = Reshaper("skip",cv2.INTER_CUBIC)
 
-def printErr(*str):
-    print(bcolors.FAIL + "".join(str) + bcolors.ENDC)
+def printErr(strg):
+    print(bcolors.FAIL + str(strg) + bcolors.ENDC)
 
 
 def setDynamicLr():
@@ -122,12 +129,12 @@ def setDataset(pathToFile):
     global LABELS_TESTSET
     lines = []
     if not os.path.isfile(os.path.join(ABSPATH,pathToFile)):
-        printErr("File not found at: ", os.path.join(ABSPATH,pathToFile))
+        printErr("File not found at: "+ os.path.join(ABSPATH,pathToFile))
         return 0
     with open(os.path.join(ABSPATH,pathToFile),"r") as file:
         lines = file.readlines()
     if len(lines) != 4:
-        printErr("Error on reading dataset specified on file: ", pathToFile)
+        printErr("Error on reading dataset specified on file: "+ pathToFile)
         return 0
     BASEPATH = lines[0].rstrip("\n")
     LABELS_DATA = lines[1].rstrip("\n")
@@ -154,7 +161,7 @@ def getDataset(pathToFile,basepath,verbose = 1,overwrite=0):
     file_converted = 0
     lines = []
     if not os.path.isfile(os.path.join(ABSPATH,pathToFile)):
-        printErr("File not found at: ", os.path.join(ABSPATH,pathToFile))
+        printErr("File not found at: "+ os.path.join(ABSPATH,pathToFile))
         return 0
     with open(os.path.join(ABSPATH,pathToFile),"r") as file:
         lines = file.readlines()
@@ -163,8 +170,10 @@ def getDataset(pathToFile,basepath,verbose = 1,overwrite=0):
     if verbose: print("Loading data set defined in: ", pathToFile)
     if verbose: print("Total file count: ", loaded_total)
     loaded_index = 0
+    total_index = 0
     postfix = []
     for line in lines:
+        total_index += 1
         x = line.split()
         pth = os.path.join(basepath,x[0])
         imgname = x[0].split("/")[-1]
@@ -193,7 +202,7 @@ def getDataset(pathToFile,basepath,verbose = 1,overwrite=0):
         dset.label.append(int(x[1]))
         loaded_index += 1
         suf = "loaded: " + str(loaded_index-file_skipped) + "/" + str(loaded_total) + " - skipped: " + str(file_skipped) + " - converted: " + str(file_converted)
-        if verbose: printProgressBar(loaded_index,loaded_total,suffix=suf,length=30)
+        if verbose: printProgressBar(total_index,loaded_total,suffix=suf,length=30)
     if verbose:
         print()
         print()
@@ -287,7 +296,7 @@ def test(model,testSet,savequery=1):
 def getSummary():
     shuf = "Yes" if shuffle else "No"
     tr = "trained" if model_trained else "not_trained"
-    dlrstr = "lr * " + str(lrf) + " every " + str(everyepoch) + " epoch(s)" if dlr else "No"
+    dlrstr = str(lrate) + " * " + str(lrf) + " every " + str(everyepoch) + " epoch(s)" if dlr else str(lrate)
     resh = ""
     if reshaper.mod == "skip": resh ="No"
     elif reshaper.mod == "padding": resh ="Padding"
@@ -300,9 +309,29 @@ def getSummary():
         "Random seed: " + str(rseed) + "\n" +\
         "Shuffle: " + str(shuf) + "\n" +\
         "Reshape image: " + str(resh) + "\n" +\
-        "Dynamic learning rate: " + dlrstr + "\n" +\
+        "Learning rate: " + dlrstr + "\n" +\
         "Image shape requested: (" + str(ROW) + "x" + str(COL) + "x" + str(CH) + ")\n"
     return smry
+
+def selector(name,path,ext,selection):
+    list = listFileInDir(path,ext,prnt=0)
+    if not selection:
+        print("Avaliable " + name + ": ")
+        listFileInDir(path,ext,prnt=1)
+        return 0, ""
+    if isInt(selection):
+        if (int(selection)-1)>=len(list) or int(selection)<=0:
+            print("Avaliable " + name + ": ")
+            listFileInDir(path,ext,prnt=1)
+            return 0, ""
+        file_selected = list[int(selection)-1]
+        selection = file_selected
+    if os.path.isfile(path+"/"+selection):
+        return 1, path+"/"+selection
+    else: 
+        printErr("Cannot open file: "+str(path)+"/"+str(selection))
+        return 0, ""
+
 
 import cmd
 commands = []
@@ -314,32 +343,36 @@ class CmdParse(cmd.Cmd):
         print(commands)
     def do_summary(self, line):
         printBorder(getSummary())
-    def do_dataset(self,dset_selected):
+    def do_dataset(self,dset_selected,verbose=1):
         global dsname
-        if dset_selected:
-            dsetlist = listFileInDir("./DATASET",".ds",prnt=0)
-            if isInt(dset_selected):
-                if (int(dset_selected)-1)>=len(dsetlist) or int(dset_selected)<=0:
-                    print("Available dataset: ")
-                    listFileInDir("./DATASET",".ds",prnt=1)
-                    return
-                ds_name = dsetlist[int(dset_selected)-1]
-                if os.path.isfile("./DATASET/"+ds_name):
-                    getModel("./DATASET/"+ds_name,ds_name)
-                else: 
-                    printErr("Cannot open file: ", ds_name)
-            else:
-                check = setDataset("DATASET/"+dset_selected)
-                if not check: printErr("Unable to load dataset: ", "./DATASET",dset_selected)
-                else:
-                    dsname=dset_selected
-                    print("Dataset selected: ", "./DATASET/"+dset_selected)
-        else:
-            print("Dataset selected: ", dsname)
-            print("Available datasets: ")
-            listFileInDir("./DATASET",".ds",prnt=1)
+        x,ds_name = selector("datasets","./DATASET","ds",dset_selected)
+        if not x: return
+        check = setDataset(ds_name)
+        if not check: 
+            printErr("Unable to load dataset: " + str(dset_selected))
+            return
+        dsname=ds_name
+        if verbose: print("Dataset selected: ", ds_name)
+    def do_load(self, fname):
+        x,m_name = selector("networks","./NETWORK","keras",fname)
+        if not x: return
+        getModel(m_name,m_name)
+    def do_new(self, fname, verbose=0):
+        x,m_name = selector("models","./MODELS","h5",fname)
+        if not x: return
+        getModel(m_name,m_name)
+        setLr(lrate)
     def do_ds(self,dset_selected):
         self.do_dataset(dset_selected)
+    def do_lr(self,lrt):
+        global lrate
+        if lrt:
+            if isFloat(lrt):
+                lrate = float(lrt)
+                print("Learning rate changed to: ", lrate)
+            else:
+                printErr("Error on parsing value as integer: " + str(lrt))
+        else: print("Learning rate: ", lrate)
     def do_batch(self,batch):
         global bsize
         if batch:
@@ -347,14 +380,15 @@ class CmdParse(cmd.Cmd):
                 bsize = int(batch)
                 print("Batch size changed to: ", bsize)
             else:
-                printErr("Error on parsing value as integer: ", batch)
+                printErr("Error on parsing value as integer: " + str(batch))
         else: print("Batch size: ", bsize)
     def do_seed(self,sd):
         global rseed
         if sd:
             if isInt(sd):
                 rseed = int(sd)
-                printErr("Batch size changed to: ", rseed)
+                setSeed(rseed)
+                print("Seed changed to: ", rseed)
             else:
                 print("Error on parsing value as integer: ", sd)
         else: print("Seed: ", rseed)
@@ -365,7 +399,7 @@ class CmdParse(cmd.Cmd):
                 epochs = int(ep)
                 print("Epoch(s) changed to: ", epochs)
             else:
-                printErr("Error on parsing value as integer: ", ep)
+                printErr("Error on parsing value as integer: " + str(ep))
         else: print("Epoch(s): ", epochs)
     def do_earlystop(self,line):
         global early_stopping
@@ -381,7 +415,7 @@ class CmdParse(cmd.Cmd):
                     es = "true"
                 print("Early stopping changed to: ", es)
             else:
-                printErr("Error on parsing value as boolean: ", line)
+                printErr("Error on parsing value as boolean: " + str(line))
         else:
             if early_stopping: print("Early stopping: true")
             else: print("Early stopping: false")
@@ -399,7 +433,7 @@ class CmdParse(cmd.Cmd):
                     sh = "true"
                 print("Shuffle changed to: ", sh)
             else:
-                printErr("Error on parsing value as boolean: ", shuf)
+                printErr("Error on parsing value as boolean: " + str(shuf))
         else:
             if shuffle: print("Shuffle: true")
             else: print("Shuffle: false")
@@ -477,7 +511,7 @@ class CmdParse(cmd.Cmd):
                     printErr("Error while loading dataset")
                     return
             else:
-                printErr("Error on parsing value as a float: ", vspl)
+                printErr("Error on parsing value as a float: " + str(vspl))
                 return
         else:
             ds = getDataset(LABELS_DATA,BASEPATH)
@@ -503,14 +537,14 @@ class CmdParse(cmd.Cmd):
         if testfile:
             testSet = getDataset(testfile,BASEPATH)
             if testSet == 0 or testSet == -1: 
-                printErr("Error while loading test set: ",testfile)
+                printErr("Error while loading test set: " + str(testfile))
                 return
             test(model,testSet)
         else:
             if qry(LABELS_TESTSET + " will be used. It\'s ok?"):
                 testSet = getDataset(LABELS_TESTSET,BASEPATH)
                 if testSet == 0 or testSet == -1: 
-                    printErr("Error while loading test set: ",testfile)
+                    printErr("Error while loading test set: " + str(testfile))
                     return
                 test(model,testSet)
             else: return
@@ -528,7 +562,7 @@ class CmdParse(cmd.Cmd):
                     x = "true"
                 print("Dynamic learning rate changed to: ", x)
             else:
-                printErr("Error on parsing value as boolean: ", lr)
+                printErr("Error on parsing value as boolean: " + str(lr))
         else:
             dlrstr = "lr * " + str(lrf) + " every " + str(everyepoch) + " epoch(s)" if dlr else "No"
             print("Dynamic learning rate: " + dlrstr)
@@ -556,52 +590,6 @@ class CmdParse(cmd.Cmd):
         val, idx = min((val, idx) for (idx, val) in enumerate(history.history['val_loss']))
         saveData("HISTORY TRAINING DATA:\nEpochs: "+str(len(history.history["accuracy"]))+"\nBest Valid. loss value: "+ str(val) +" at epoch: "+str(idx+1)+"\n\nAccuracy:\n" +tr_accuracy+"\nLoss\n"+tr_loss+ "\nValid. accuracy\n"+
             tr_vacc+"\nValid. loss\n"+tr_vloss+"\n\nTRAINING TIME: "+str(tr_time),"TRAINING_RESULT")
-    def do_load(self, fname):
-        global ROW, COL, CH, model, mname, model_trained, bsize, epochs
-        if fname:
-            modellist = listFileInDir("./NETWORK",".keras",prnt=0)
-            path = "./NETWORK/"+fname
-            if(os.path.isfile(path)):
-                getModel(path,fname)
-            elif isInt(fname):
-                if (int(fname)-1)>=len(modellist) or int(fname)<=0:
-                    print("Available models: ")
-                    listFileInDir("./NETWORK",".keras",prnt=1)
-                    return
-                mod_name = modellist[int(fname)-1]
-                if os.path.isfile("./NETWORK/"+mod_name):
-                    getModel("./NETWORK/"+mod_name,mod_name)
-                    print(model.input_shape)
-                else: 
-                    printErr("Cannot open file: ", mod_name)
-                    return
-            else: 
-                printErr("Cannot open file: ", path)
-                return
-        else:
-            print("Available models: ")
-            listFileInDir("./NETWORK",".keras",prnt=1)
-    def do_new(self, modname):
-        global model, model_trained, mname, ROW, COL, CH
-        if modname:
-            if modname == "malexnet":
-                model = model_mAlexNet()
-                ROW, COL, CH = 150, 150, 3
-            elif modname == "alexnet":
-                model = model_AlexNet()
-                ROW, COL, CH = 224, 224, 3
-            elif modname == "lenet":
-                model = model_leNet()
-                ROW, COL, CH = 32, 32, 1
-            elif modname == "vgg16":
-                model = model_VGG16()
-                ROW, COL, CH = 224, 224, 3
-            else:
-                print("Please specify network model from listed below:\nmalexnet\nalexnet\nlenet\nvgg16")
-                return
-            model_trained = 0
-            mname = str(model.name+"-"+modname)
-        else: print("Please specify network model from listed below:\nmalexnet\nalexnet\nlenet\nvgg16")
     def do_plot(self, grf):
         if history == -1:
             print("History not available for this model. Please train the model first")
@@ -615,106 +603,91 @@ class CmdParse(cmd.Cmd):
         else: print("Specify if you want to plot \'a\': accuracy, or \'l\': loss")
     def do_multirun(self,line):
         global model, bsize, shuffle, epochs, history
-        if line:
-            pth = os.path.join(ABSPATH,"RUN/",line)
-            if not os.path.isfile(pth):
-                printErr("Cannot open .run file: ", pth)
-                return
-            with open(pth,"r") as file:
-                lines = file.readlines()
-            if len(lines) != 5:
-                printErr("File: ", pth," is not well formatted")
-                return
+        x,pth = selector("run files","./RUN","run",line)
+        if not x: return
+        with open(pth,"r") as file:
+            lines = file.readlines()
+        if len(lines) != 5:
+            printErr("File: " + str(pth) + " is not well formatted")
+            return
             
-            inseed = int(lines[0].rstrip("\n"))
-            finseed = int(lines[1].rstrip("\n"))
-            netmodel = lines[2].rstrip("\n")
-            dstrain = lines[3].rstrip("\n")
-            dstest = lines[4].rstrip("\n")
-            runlength = finseed - inseed
+        inseed = int(lines[0].rstrip("\n"))
+        finseed = int(lines[1].rstrip("\n"))
+        netmodel = lines[2].rstrip("\n")
+        dstrain = lines[3].rstrip("\n")
+        dstest = lines[4].rstrip("\n")
+        runlength = finseed - inseed
+        self.do_new(netmodel,verbose=0)
+        self.do_dataset(dstrain,verbose=0)
+        smry = "RUN(s) SIZE: " + str(runlength) + "\n"
+        smry += getSummary()
+        printBorder(smry)
+        if not qry("Proceed with run? "):
+            return
             
-            shuf = "Yes" if shuffle else "No"
-            resh = ""
-            if reshaper.mod == "skip": resh ="No"
-            elif reshaper.mod == "padding": resh ="Padding"
-            elif reshaper.mod == "interpolate": resh="Interpolation: " + interpmod[reshaper.val]
-            
-            smry = "RUN(s) SIZE: " + str(runlength) + "\n"
-            smry += getSummary()
-            printBorder(smry)
-            if not qry("Proceed with run? "):
-                return
-
-            self.do_new(netmodel)
-            self.do_dataset(dstrain)
-            dset = getDataset(LABELS_DATA,BASEPATH)
-            vset = getDataset(LABELS_VALID,BASEPATH)
-            self.do_dataset(dstest)
-            tset = getDataset(LABELS_TESTSET,BASEPATH)
-
-            results = 
-             + "\n"
-            results += "DATASET: " + LABELS_DATA + "\n"
-            results += "VALIDATION SET: " + LABELS_VALID  + "\n"
-            results += "TEST SET: " + LABELS_TESTSET  + "\n\n"
-            runindex = 1
-            testresvalues = []
-            avtimetr = 0
-            t_start = time.time()
-            for seedval in range(inseed,finseed):
-                results += " --- Run <"+str(runindex)+"> --- seed: " + str(seedval) + " --- \n"
-                print("----------------- RUN: " + str(runindex) + "/" + str(runlength) + " -----------------")
-                self.do_seed(seedval)
-                self.do_new(netmodel)
-                history = train(model,bsize,shuffle,epochs,dset,vset)
-                results += "Training time: " + str(secToTime(training_time)) + "\n"
-                avtimetr += training_time
-                print("Training time: " + str(secToTime(training_time)))
-                print("----------------- RUN: " + str(runindex) + "/" + str(runlength) + " -----------------")
-                x, values = test(model,tset,savequery=0)
-                results += x + "\n"
-                testresvalues.append(values)
-                runindex += 1
-            results += " -----------------END---------------- \n"
-            avtimetr = avtimetr / runlength
-            acc, f1, tpr, tnr, fnr, fpr = 0,0,0,0,0,0
-            for rval in testresvalues:
-                _acc, _f1, _tpr, _tnr, _fnr, _fpr = rval
-                acc += _acc
-                f1 += _f1
-                tpr += _tpr
-                tnr += _tnr
-                fnr += _fnr
-                fpr += _fpr
-            acc /= len(testresvalues)
-            f1 /= len(testresvalues)
-            tpr /= len(testresvalues)
-            tnr /= len(testresvalues)
-            fnr /= len(testresvalues)
-            fpr /= len(testresvalues)
-            t_end = time.time()
-            results += "Total time: " + str(secToTime(t_end-t_start))
-            results += "Mean values: \n"
-            results += "Training time: " + str(secToTime(avtimetr)) + " \n"
-            _res = "Accuracy: " + str(acc*100) + "%\n" +\
-            "F1 score: " + str(f1) + "\n" +\
-            "\n" +\
-            "TNR: " + str(tnr) + "\n" +\
-            "TPR: " + str(tpr) + "\n" +\
-            "FNR: " + str(fnr) + "\n" +\
-            "FPR: " + str(fpr) + "\n" 
-            results += _res
-            print(results)
-            if qry("Save run results? "):
-                dateTimeObj = datetime.now()
-                timestampStr = dateTimeObj.strftime("%d_%b_%Y(%H_%M_%S.%f)")
-                filename = "RUN_"+mname+"_"+timestampStr+".log"
-                with open("RUN/RESULT/"+filename, "x") as text_file:
-                    text_file.write(getSummary()+"\n"+results)
-                    print("Results saved as: ", filename)
-        else:
-            print("Available run files: ")
-            listFileInDir("./RUN",".run",prnt=1)
+        dset = getDataset(LABELS_DATA,BASEPATH)
+        vset = getDataset(LABELS_VALID,BASEPATH)
+        self.do_dataset(dstest, verbose=0)
+        tset = getDataset(LABELS_TESTSET,BASEPATH)
+        results = ""
+        results += "DATASET: " + LABELS_DATA + "\n"
+        results += "VALIDATION SET: " + LABELS_VALID  + "\n"
+        results += "TEST SET: " + LABELS_TESTSET  + "\n\n"
+        runindex = 1
+        testresvalues = []
+        avtimetr = 0
+        t_start = time.time()
+        for seedval in range(inseed,finseed):
+            results += " --- Run <"+str(runindex)+"> --- seed: " + str(seedval) + " --- \n"
+            print("----------------- RUN: " + str(runindex) + "/" + str(runlength) + " - SEED: " + str(seedval) + "----------------")
+            self.do_seed(seedval)
+            self.do_new(netmodel,verbose=0)
+            history = train(model,bsize,shuffle,epochs,dset,vset)
+            results += "Training time: " + str(secToTime(training_time)) + "\n"
+            avtimetr += training_time
+            print("Training time: " + str(secToTime(training_time)))
+            x, values = test(model,tset,savequery=0)
+            results += x + "\n"
+            testresvalues.append(values)
+            runindex += 1
+        print("\n -----------------END---------------- \n")
+        results += " -----------------END---------------- \n"
+        avtimetr = avtimetr / runlength
+        acc, f1, tpr, tnr, fnr, fpr = 0,0,0,0,0,0
+        for rval in testresvalues:
+            _acc, _f1, _tpr, _tnr, _fnr, _fpr = rval
+            acc += _acc
+            f1 += _f1
+            tpr += _tpr
+            tnr += _tnr
+            fnr += _fnr
+            fpr += _fpr
+        acc /= len(testresvalues)
+        f1 /= len(testresvalues)
+        tpr /= len(testresvalues)
+        tnr /= len(testresvalues)
+        fnr /= len(testresvalues)
+        fpr /= len(testresvalues)
+        t_end = time.time()
+        results += "Total time: " + str(secToTime(t_end-t_start)) + "\n"
+        results += "Mean values: \n"
+        results += "Training time: " + str(secToTime(avtimetr)) + " \n"
+        _res = "Accuracy: " + str(acc*100) + "%\n" +\
+        "F1 score: " + str(f1) + "\n" +\
+        "\n" +\
+        "TNR: " + str(tnr) + "\n" +\
+        "TPR: " + str(tpr) + "\n" +\
+        "FNR: " + str(fnr) + "\n" +\
+        "FPR: " + str(fpr) + "\n" 
+        results += _res
+        print("\n\n",results)
+        if qry("Save run results? "):
+            dateTimeObj = datetime.now()
+            timestampStr = dateTimeObj.strftime("%d_%b_%Y(%H_%M_%S.%f)")
+            filename = "RUN_"+mname+"_"+timestampStr+".log"
+            with open("RUN/RESULT/"+filename, "x") as text_file:
+                text_file.write(getSummary()+"\n"+results)
+                print("Results saved as: ", filename)
     def do_quit(self,line):
         sys.exit()
     def do_exit(self,line):
@@ -726,9 +699,11 @@ class CmdParse(cmd.Cmd):
         commands.append(line)
 
 def main():
+    mname = sys.argv[1]
     os.system("clear")
     setSeed(rseed)
     parser = CmdParse()
+    parser.do_new(mname,verbose=0)
     parser.cmdloop(intro="CMDNET " + VERSION + " by Andrea Vaiuso")
 
 if __name__ == "__main__":
