@@ -1,4 +1,4 @@
-VERSION = "1.0.4.1"
+VERSION = "1.0.4.2"
 
 from utilities import isBoolean, listFileInDir, summarizeAccuracy, summarizeLoss, qry, toBool, imgpad, secToTime
 from keras.backend import int_shape
@@ -62,6 +62,7 @@ class DynamicLR(keras.callbacks.Callback):
         if self.epochCount == self.epo:
             self.epochCount = 0
             K.set_value(model.optimizer.learning_rate, model.optimizer.learning_rate*self.val)
+            print("Learning rate changed to: ", K.get_value(model.optimizer.learning_rate))
 
 def setLr(lr):
     K.set_value(model.optimizer.learning_rate, lr)
@@ -269,7 +270,6 @@ def test(model,testSet,savequery=1):
     n = fp + tn
     acc = (tp + tn) / (p+n)
     f1 = (2*tp)/((2*tp)+fp+fn) #f1 score
-    #rates
     tpr, tnr, fnr, fpr = tp/p, tn/n, fn/p, fp/n
     res = "P: " + str(p) + "\n" +\
         "N: " + str(n) + "\n" +\
@@ -360,7 +360,8 @@ class CmdParse(cmd.Cmd):
     def do_new(self, fname, verbose=0):
         x,m_name = selector("models","./MODELS","h5",fname)
         if not x: return
-        getModel(m_name,m_name)
+        name = m_name.split("/")[-1]
+        getModel(m_name,name)
         setLr(lrate)
     def do_ds(self,dset_selected):
         self.do_dataset(dset_selected)
@@ -611,7 +612,7 @@ class CmdParse(cmd.Cmd):
             else: print("Specify if you want to plot \'a\': accuracy, or \'l\': loss")
         else: print("Specify if you want to plot \'a\': accuracy, or \'l\': loss")
     def do_multirun(self,line):
-        global model, bsize, shuffle, epochs, history
+        global model, bsize, shuffle, epochs, history,rseed
         x,pth = selector("run files","./RUN","run",line)
         if not x: return
         with open(pth,"r") as file:
@@ -622,6 +623,8 @@ class CmdParse(cmd.Cmd):
             
         inseed = int(lines[0].rstrip("\n"))
         finseed = int(lines[1].rstrip("\n"))
+        rseed = inseed
+        self.do_seed(inseed)
         netmodel = lines[2].rstrip("\n")
         dstrain = lines[3].rstrip("\n")
         dstest = lines[4].rstrip("\n")
@@ -632,8 +635,7 @@ class CmdParse(cmd.Cmd):
         smry += getSummary()
         printBorder(smry)
         if not qry("Proceed with run? "):
-            return
-            
+            return    
         dset = getDataset(LABELS_DATA,BASEPATH)
         vset = getDataset(LABELS_VALID,BASEPATH)
         self.do_dataset(dstest, verbose=0)
@@ -664,7 +666,7 @@ class CmdParse(cmd.Cmd):
         avtimetr = avtimetr / runlength
         acc, f1, tpr, tnr, fnr, fpr = 0,0,0,0,0,0
         for rval in testresvalues:
-            _acc, _f1, _tpr, _tnr, _fnr, _fpr = rval
+            _acc, _f1, _tpr, _tnr, _fnr, _fpr, = rval
             acc += _acc
             f1 += _f1
             tpr += _tpr
@@ -692,7 +694,7 @@ class CmdParse(cmd.Cmd):
         print("\n\n",results)
         if qry("Save run results? "):
             dateTimeObj = datetime.now()
-            timestampStr = dateTimeObj.strftime("%d_%b_%Y(%H_%M_%S.%f)")
+            timestampStr = dateTimeObj.strftime("%d_%b_%Y(%H:%M:%S.%f)")
             filename = "RUN_"+mname+"_"+timestampStr+".log"
             with open("RUN/RESULT/"+filename, "x") as text_file:
                 text_file.write(getSummary()+"\n"+results)

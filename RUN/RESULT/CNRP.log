@@ -1,0 +1,120 @@
+Dataset selected: ./DATASET/CNRP.ds
+Network: malex_SGD_lr8e-4.h5
+Network trained: trained
+Batch size: 64
+Epoch(s): 6
+Shuffle: Yes
+Reshape image: Interpolation: cubic
+Learning rate: 0.0008 * 0.75 every 2 epoch(s)
+Image shape requested: (150x150x3)
+
+DATASET: DATASET/CNRP/LABELS/train.txt
+VALIDATION SET: DATASET/CNRP/LABELS/val.txt
+TEST SET: DATASET/CNRP/LABELS/test.txt
+
+ --- Run <1> --- seed: 0 --- 
+Training time: 0d:0h:30m:23s
+
+P: 18223
+N: 13602
+TN: 13279
+TP: 17953
+FN: 270
+FP: 323
+
+Accuracy: 98.13668499607226%
+F1 score: 0.9837529795336859
+
+TNR: 0.9762534921335098
+TPR: 0.9851835592383252
+FNR: 0.014816440761674807
+FPR: 0.023746507866490223
+
+Test execution time: 0d:0h:0m:38s
+ --- Run <2> --- seed: 1 --- 
+Training time: 0d:0h:28m:49s
+
+P: 18225
+N: 13600
+TN: 13269
+TP: 17945
+FN: 280
+FP: 331
+
+Accuracy: 98.08012568735272%
+F1 score: 0.983260732582669
+
+TNR: 0.9756617647058824
+TPR: 0.984636488340192
+FNR: 0.015363511659807956
+FPR: 0.024338235294117647
+
+Test execution time: 0d:0h:0m:33s
+ --- Run <3> --- seed: 2 --- 
+Training time: 0d:0h:28m:60s
+
+P: 18178
+N: 13647
+TN: 13305
+TP: 17934
+FN: 244
+FP: 342
+
+Accuracy: 98.15868028279654%
+F1 score: 0.9839249465079278
+
+TNR: 0.9749395471532205
+TPR: 0.9865771812080537
+FNR: 0.013422818791946308
+FPR: 0.02506045284677951
+
+Test execution time: 0d:0h:0m:34s
+ --- Run <4> --- seed: 3 --- 
+Training time: 0d:3h:28m:30s
+
+P: 17908
+N: 13917
+TN: 13412
+TP: 17771
+FN: 137
+FP: 505
+
+Accuracy: 97.98271798900235%
+F1 score: 0.9822573513154985
+
+TNR: 0.9637134439893655
+TPR: 0.9923497878043332
+FNR: 0.0076502121956667415
+FPR: 0.03628655601063448
+
+Test execution time: 0d:0h:0m:31s
+ --- Run <5> --- seed: 4 --- 
+Training time: 0d:0h:26m:48s
+
+P: 18223
+N: 13602
+TN: 13279
+TP: 17953
+FN: 270
+FP: 323
+
+Accuracy: 98.13668499607226%
+F1 score: 0.9837529795336859
+
+TNR: 0.9762534921335098
+TPR: 0.9851835592383252
+FNR: 0.014816440761674807
+FPR: 0.023746507866490223
+
+Test execution time: 0d:0h:0m:34s
+ -----------------END---------------- 
+Total time: 0d:5h:26m:22s
+Mean values: 
+Training time: 0d:1h:4m:42s 
+Accuracy: 98.09897879025922%
+F1 score: 0.9833897978946935
+
+TNR: 0.9733643480230976
+TPR: 0.9867861151658459
+FNR: 0.013213884834154125
+FPR: 0.02663565197690242
