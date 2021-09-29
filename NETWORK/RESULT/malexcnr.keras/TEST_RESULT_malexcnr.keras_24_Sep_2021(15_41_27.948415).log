@@ -1,0 +1,28 @@
+Dataset selected: ./DATASET/PKLOT2D.ds
+Network: malexcnr.keras
+Network trained: trained
+Batch size: 64
+Epoch(s): 11
+Random seed: 4
+Shuffle: Yes
+Reshape image: Scaled - padding
+Learning rate: 0.0003375 * 0.75 every 2 epoch(s)
+Image shape requested: (150x150x3)
+
+
+P: 78796
+N: 2998
+TN: 2976
+TP: 43124
+FN: 35672
+FP: 22
+
+Accuracy: 56.361102281340926%
+F1 score: 0.7072870709025603
+
+TNR: 0.9926617745163442
+TPR: 0.5472866642976801
+FNR: 0.4527133357023199
+FPR: 0.00733822548365577
+
+Test execution time: 0d:0h:1m:12s

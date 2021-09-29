@@ -1,0 +1,28 @@
+Dataset selected: ./DATASET/PKLOT2D.ds
+Network: malex50e.keras
+Network trained: trained
+Batch size: 64
+Epoch(s): 11
+Random seed: 4
+Shuffle: Yes
+Reshape image: Interpolation: cubic
+Learning rate: 0.001 * 0.75 every 2 epoch(s)
+Image shape requested: (150x150x3)
+
+
+P: 51014
+N: 30780
+TN: 28592
+TP: 40958
+FN: 10056
+FP: 2188
+
+Accuracy: 85.03068684744602%
+F1 score: 0.8699660152931181
+
+TNR: 0.9289148797920728
+TPR: 0.8028776414317639
+FNR: 0.19712235856823618
+FPR: 0.07108512020792722
+
+Test execution time: 0d:0h:1m:29s

@@ -1,0 +1,28 @@
+Dataset selected: ./DATASET/CNRP.ds
+Network: malex50e.keras
+Network trained: trained
+Batch size: 64
+Epoch(s): 11
+Random seed: 4
+Shuffle: Yes
+Reshape image: No
+Learning rate: 0.001 * 0.75 every 2 epoch(s)
+Image shape requested: (150x150x3)
+
+
+P: 17557
+N: 13572
+TN: 13248
+TP: 17482
+FN: 75
+FP: 324
+
+Accuracy: 98.71823701371711%
+F1 score: 0.9887170206147669
+
+TNR: 0.9761273209549072
+TPR: 0.9957281995785157
+FNR: 0.0042718004214843085
+FPR: 0.023872679045092837
+
+Test execution time: 0d:0h:0m:30s

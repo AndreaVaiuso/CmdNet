@@ -32,6 +32,22 @@ def imgpad(im,h,w):
   new_im = cv2.copyMakeBorder(im, top, bottom, left, right, cv2.BORDER_CONSTANT,value=color)
   return new_im
 
+def imgscpad(img_array,ROW,COL,reshaper):
+  _row,_col,_ch = img_array.shape
+  if _row >= _col:
+      col = math.ceil(ROW/_row*_col)
+      img_array = cv2.resize(img_array,(ROW,col), reshaper.val)
+  else:
+      row = math.ceil(COL/_col*_row)
+      img_array = cv2.resize(img_array,(row,COL), reshaper.val)
+  img_array = imgpad(img_array,ROW,COL)
+  return img_array
+
+def imgSuperRes(img_array,upsampler,ROW,COL,reshaper):
+  img_array = upsampler.upsample(img_array)
+  img_array = cv2.resize(img_array,(ROW,COL), reshaper.val)
+
+
 def drawCurves(history):
     #Summarize history for accuracy
     plt.plot(history.history["accuracy"])
@@ -88,7 +104,8 @@ def printProgressBar(iteration, total, prefix = '>', suffix = '', decimals = 1, 
     print(f'\r{prefix} {percent}% [\033[92m{bar}\033[0m] {suffix}', end = printEnd)
     # Print New Line on Complete
     if iteration == total: 
-        print()
+      print(f'\r{prefix} {percent}% [\033[92m{bar}\033[0m]', end = printEnd)
+      print()
 
 def listFileInDir(dir,extension="",prnt=0):
   dirlist = []

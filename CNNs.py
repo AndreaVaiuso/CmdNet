@@ -42,6 +42,39 @@ def model_mAlexNet(verbose=1):
     if verbose: print(mAlexNet.summary())
     return mAlexNet
 
+def model_mAlexNetPlus(verbose=1):
+    mAlexNet = Sequential()
+    # Layer 1
+    mAlexNet.add(Conv2D(filters=16, kernel_size=(11,11), input_shape = (150,150,3), strides = (4,4),  padding='same'))
+    mAlexNet.add(Activation('relu'))
+    mAlexNet.add(MaxPooling2D(pool_size=(3, 3), strides=(2,2)))
+    
+    # Layer 2
+    mAlexNet.add(Conv2D(filters=20, kernel_size=(5,5), strides = (1,1),  padding='same'))
+    mAlexNet.add(Activation('relu'))
+    mAlexNet.add(MaxPooling2D(pool_size=(3, 3), strides=(2,2)))
+    
+    # Layer 3
+    mAlexNet.add(Conv2D(filters=30, kernel_size=(3,3), strides = (1,1),  padding='same'))
+    mAlexNet.add(Activation('relu'))
+    mAlexNet.add(MaxPooling2D(pool_size=(3, 3), strides=(2,2)))
+    
+    # Layer 4
+    mAlexNet.add(Flatten())
+    mAlexNet.add(Dense(48, activation = 'relu'))
+
+    # Layer 5
+    mAlexNet.add(Flatten())
+    mAlexNet.add(Dense(22, activation = 'relu'))
+    
+    # Layer 6
+    mAlexNet.add(Dense(2, activation = 'softmax'))
+
+    mAlexNet.compile(optimizer = Adam(learning_rate=0.001), loss = 'binary_crossentropy', metrics = ['accuracy'])
+    if verbose: print(mAlexNet.summary())
+    return mAlexNet
+
+
 # input-> RGB images 224x224
 def model_AlexNet(verbose=1):
     AlexNet = Sequential()

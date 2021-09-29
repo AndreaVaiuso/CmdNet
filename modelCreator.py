@@ -1,4 +1,4 @@
 import CNNs
 
-model1 = CNNs.model_mAlexNet()
-model1.save("malex_SGD_lr8e-4.h")
+model1 = CNNs.model_mAlexNetPlus()
+model1.save("MODELS/malexPlus.h5")

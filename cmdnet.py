@@ -1,4 +1,4 @@
-VERSION = "1.0.4.2"
+VERSION = "1.0.4.4"
 
 from utilities import isBoolean, listFileInDir, summarizeAccuracy, summarizeLoss, qry, toBool, imgpad, secToTime
 from keras.backend import int_shape
@@ -20,6 +20,7 @@ import sys
 import socket
 import cmd
 import random
+import math
 
 class bcolors:
     HEADER = '\033[95m'
@@ -66,6 +67,11 @@ class DynamicLR(keras.callbacks.Callback):
 
 def setLr(lr):
     K.set_value(model.optimizer.learning_rate, lr)
+    updateLr()
+
+def updateLr():
+    global lrate
+    lrate = K.get_value(model.optimizer.learning_rate)
 
 interpmod = {
     cv2.INTER_LINEAR : "linear",
@@ -87,6 +93,7 @@ LABELS_DATA = ""
 LABELS_VALID = ""
 LABELS_TESTSET = ""
 
+#Default values:
 dsname = "None"
 history = -1
 bsize = 64
@@ -98,6 +105,7 @@ model_trained = 0
 mname = "None"
 training_time = 0
 lrate = 0.0008
+edsr = ""
 
 first = 1
 original_weights = []
@@ -154,8 +162,8 @@ def getModel(path, fname):
     mname = fname
     model_trained = 1
 
-def getDataset(pathToFile,basepath,verbose = 1,overwrite=0):
-    global reshaper
+def getDataset(pathToFile,basepath,verbose = 1,inspect=0,rewrite=0):
+    global reshaper, edsr
     loaded_index = 0
     loaded_total = 0
     file_skipped = 0
@@ -173,7 +181,18 @@ def getDataset(pathToFile,basepath,verbose = 1,overwrite=0):
     loaded_index = 0
     total_index = 0
     postfix = []
+    ETA = "-"
+    tic = 1
+    tt1 = time.time()
+
+    acc = 0
+    timeindex = 0
+    
     for line in lines:
+
+        t1 = time.time()
+        timeindex += 1
+        skipped = 0
         total_index += 1
         x = line.split()
         pth = os.path.join(basepath,x[0])
@@ -182,28 +201,56 @@ def getDataset(pathToFile,basepath,verbose = 1,overwrite=0):
         if img_array is None:
             postfix.append("Cannot open image: " + os.path.abspath(pth))
             file_skipped += 1
-            continue
-        if img_array.shape != (ROW,COL,CH):
-            if reshaper.mod == "padding":
-                img_array = imgpad(img_array,ROW,COL)
-                cv2.imshow("img",img_array)
-                postfix.append("Reshaping image: " + imgname)
-                file_converted += 1
-                if overwrite: cv2.imwrite(pth,img_array)
-            elif reshaper.mod == "interpolate":
-                img_array = cv2.resize(img_array,(ROW,COL), reshaper.val)
-                postfix.append("Reshaping image: " + imgname)
-                file_converted += 1
-                if overwrite: cv2.imwrite(pth,img_array)
-            else:
-                postfix.append("Skipping image: " + imgname)
-                file_skipped += 1
-                continue
-        dset.data.append(img_array)
-        dset.label.append(int(x[1]))
+            skipped = 1
+        else:
+            if img_array.shape != (ROW,COL,CH):
+                if reshaper.mod == "padding":
+                    img_array = imgpad(img_array,ROW,COL)
+                    postfix.append("Reshaping image: " + imgname)
+                    file_converted += 1
+                elif reshaper.mod == "scalepadding":
+                    _row,_col,_ch = img_array.shape
+                    if _row >= _col:
+                        col = math.ceil(ROW/_row*_col)
+                        img_array = cv2.resize(img_array,(ROW,col), reshaper.val)
+                    else:
+                        row = math.ceil(COL/_col*_row)
+                        img_array = cv2.resize(img_array,(row,COL), reshaper.val)
+                    img_array = imgpad(img_array,ROW,COL)
+                    postfix.append("Reshaping image: " + imgname)
+                    file_converted += 1
+                elif reshaper.mod.startswith("EDSR"):
+                    img_array = edsr.upsample(img_array)
+                    img_array = cv2.resize(img_array,(ROW,COL), reshaper.val)
+                    postfix.append("Reshaping image: " + imgname)
+                    if rewrite: 
+                        cv2.imwrite("./"+basepath+"/"+reshaper.mod+"/"+x[0],img_array)
+                        print("Saved to: " + "./"+basepath+"/"+reshaper.mod+"/"+x[0])
+                    file_converted += 1
+                elif reshaper.mod == "interpolate":
+                    img_array = cv2.resize(img_array,(ROW,COL), reshaper.val)
+                    postfix.append("Reshaping image: " + imgname)
+                    file_converted += 1
+                else:
+                    postfix.append("Skipping image: " + imgname)
+                    file_skipped += 1
+                    skipped = 1
+        if not skipped:
+            dset.data.append(img_array)
+            dset.label.append(int(x[1]))
         loaded_index += 1
-        suf = "loaded: " + str(loaded_index-file_skipped) + "/" + str(loaded_total) + " - skipped: " + str(file_skipped) + " - converted: " + str(file_converted)
-        if verbose: printProgressBar(total_index,loaded_total,suffix=suf,length=30)
+        if inspect: 
+            cv2.imshow(pth,img_array)
+            cv2.waitKey()
+
+        t2 = time.time()
+        acc += (t2-t1)
+        if acc >= 10:
+            ETA = secToTime(math.ceil(acc*((loaded_total-loaded_index)/timeindex)))
+            timeindex = 0
+            acc = 0
+        suf = "loaded: " + str(loaded_index-file_skipped) + "/" + str(loaded_total) + " - skipped: " + str(file_skipped) + " - converted: " + str(file_converted) + " - ETA: " + str(ETA)
+        if verbose: printProgressBar(total_index,loaded_total,suffix=suf,length=20)
     if verbose:
         print()
         print()
@@ -216,10 +263,12 @@ def getDataset(pathToFile,basepath,verbose = 1,overwrite=0):
     dset.data = np.array(dset.data)
     dset.label = np.array(dset.label)
     dset.label = to_categorical(dset.label,num_classes=2)
+    tt2 = time.time()
     if verbose: 
         print("Conversion completed")
         print("Data shape: ", dset.data.shape)
         print("Labels shape: ", dset.label.shape)
+        print("Total time for dataset loading: " + secToTime((tt2-tt1)))
     if (loaded_total-file_skipped) == 0: return -1
     return dset
 
@@ -258,6 +307,14 @@ def trainWithValSplit(model,bsize,shuffle,epochs,trainData, valid_splt):
     training_time = sum(time_callback.times)
     return history
 
+def liveTest(model,testSet,savequery=1):
+    for _img in testSet.data:
+        img = np.array([_img])
+        prd = model.predict(img,verbose=1)
+        if prd[0][0]<0.5: print("Occupato al {:.2f} %".format((prd[0][1])*100))
+        else: print("Libero al {:.2f} %".format((prd[0][0])*100))
+        cv2.imshow("Immagine",_img)
+        cv2.waitKey()
 
 def test(model,testSet,savequery=1):
     print("Testing: ")
@@ -300,6 +357,8 @@ def getSummary():
     resh = ""
     if reshaper.mod == "skip": resh ="No"
     elif reshaper.mod == "padding": resh ="Padding"
+    elif reshaper.mod == "scalepadding": resh ="Scaled - padding"
+    elif reshaper.mod == "EDSR": resh ="Super resolution EDSR"
     elif reshaper.mod == "interpolate": resh="Interpolation: " + interpmod[reshaper.val]
     smry = "Dataset selected: "+ str(dsname) +"\n"+\
         "Network: " + str(mname) + "\n" +\
@@ -356,7 +415,9 @@ class CmdParse(cmd.Cmd):
     def do_load(self, fname):
         x,m_name = selector("networks","./NETWORK","keras",fname)
         if not x: return
-        getModel(m_name,m_name)
+        name = m_name.split("/")[-1]
+        getModel(m_name,name)
+        updateLr()
     def do_new(self, fname, verbose=0):
         x,m_name = selector("models","./MODELS","h5",fname)
         if not x: return
@@ -370,6 +431,7 @@ class CmdParse(cmd.Cmd):
         if lrt:
             if isFloat(lrt):
                 lrate = float(lrt)
+                setLr(lrate)
                 print("Learning rate changed to: ", lrate)
             else:
                 printErr("Error on parsing value as integer: " + str(lrt))
@@ -439,20 +501,22 @@ class CmdParse(cmd.Cmd):
             if shuffle: print("Shuffle: true")
             else: print("Shuffle: false")
     def do_reshape(self,args):
-        global reshaper
+        global reshaper, edsr
         params = args.split()
         if len(params) == 0:
             resh = ""
             if reshaper.mod == "skip": resh ="No"
             elif reshaper.mod == "padding": resh ="Padding"
             elif reshaper.mod == "interpolate": resh="Interpolation: " + interpmod[reshaper.val]
+            elif reshaper.mod == "scalepadding": resh="Scaled - padding: " + interpmod[reshaper.val]
+            elif reshaper.mod == "EDSR": resh="Super resolution"
             print("Reshape policy: " + resh)
         else:
             if params[0].lower() == "s" or params[0].lower() == "skip":
                 reshaper.mod = "skip"
                 print("Reshape policy changed to: skip")
                 return
-            if params[0].lower() == "i" or params[0].lower() == "interpolate":
+            if params[0].lower() == "interpolate" or params[0].lower() == "scalepadding":
                 if len(params) == 1:
                     print("Wrong value for reshape policy. You must specify one of the following interpolation algorithms:")
                     print("linear")
@@ -461,21 +525,21 @@ class CmdParse(cmd.Cmd):
                     print("lanczos")
                     return
                 if params[1].lower() == "linear":
-                    reshaper.mod = "interpolate"
+                    reshaper.mod = params[0].lower()
                     reshaper.val = cv2.INTER_LINEAR
-                    print("Reshape policy changed to: interpolate linear")
+                    print("Reshape policy changed to: "+params[0].lower()+" linear")
                 elif params[1].lower() == "cubic":
-                    reshaper.mod = "interpolate"
+                    reshaper.mod = params[0].lower()
                     reshaper.val = cv2.INTER_CUBIC
-                    print("Reshape policy changed to: interpolate cubic")
+                    print("Reshape policy changed to: "+params[0].lower()+" cubic")
                 elif params[1].lower() == "nearest":
-                    reshaper.mod = "interpolate"
+                    reshaper.mod = params[0].lower()
                     reshaper.val = cv2.INTER_NEAREST
-                    print("Reshape policy changed to: interpolate nearest")   
+                    print("Reshape policy changed to: "+params[0].lower()+" nearest")   
                 elif params[1].lower() == "lanczos":
-                    reshaper.mod = "interpolate"
+                    reshaper.mod = params[0].lower()
                     reshaper.val = cv2.INTER_LANCZOS4
-                    print("Reshape policy changed to: interpolate lanczos")
+                    print("Reshape policy changed to: "+params[0].lower()+" lanczos")
                 else: 
                     print("Wrong value for reshape policy. You must specify one of the following interpolation algorithms:")
                     print("linear")
@@ -486,8 +550,33 @@ class CmdParse(cmd.Cmd):
                 reshaper.mod = "padding"
                 print("Reshape policy changed to: padding")
                 return
+            elif params[0].lower() == "sr" or params[0].lower() == "super resolution":
+                reshaper.val = cv2.INTER_CUBIC
+                edsr = cv2.dnn_superres.DnnSuperResImpl_create()
+                _rfac = 4
+                rfac = 4
+                if len(params) < 2:
+                    edsr.readModel("SR/EDSR_x"+_rfac+".pb")
+                    edsr.setModel("edsr",_rfac)
+                    reshaper.mod = "EDSRx"+_rfac
+                else:
+                    if isInt(params[1]):
+                        rfac = int(params[1])
+                        if rfac == 2 or rfac==3 or rfac == 4:
+                            edsr.readModel("SR/EDSR_x"+str(rfac)+".pb")
+                            edsr.setModel("edsr",rfac)
+                            reshaper.mod = "EDSRx"+str(rfac)
+                        else: 
+                            printErr("You must select 2, 3 or 4 as scale factor. Default value "+str(_rfac)+" will be used")
+                            edsr.readModel("SR/EDSR_x"+str(_rfac)+".pb")
+                            edsr.setModel("edsr",_rfac)
+                            reshaper.mod = "EDSRx"+str(_rfac)
+                    else:
+                        printErr("Unable to parse integer value as scale factor: " + params[1] + "\nAccepted values: 2, 3, 4")
+                print("Reshape policy changed to: EDSR Super resolution x"+str(rfac))
+                return
             else:
-                print("Wrong value for reshape policy. Use 's' for skip, 'i' for interpolate or 'p' for padding")
+                print("Wrong value for reshape policy. Use 's' for skip, 'interpolate' for interpolate, 'p' for padding, 'sr' for EDSR super resolution or 'scalepadding' for scaled padding")
     def do_train(self,vspl):
         global model,history,model_trained,skip,bsize,shuffle,epochs
         if model is None:
@@ -548,6 +637,28 @@ class CmdParse(cmd.Cmd):
                     printErr("Error while loading test set: " + str(testfile))
                     return
                 test(model,testSet)
+            else: return
+    def do_livetest(self,testfile):
+        global model_trained,dsname,LABELS_TESTSET
+        if model is None:
+            print("Dataset not selected. Please select it first by typing command \'dataset\'")
+            return
+        if not model_trained:
+            print("Model is not trained. Please train it first by typing command \'train\'")
+            return
+        if testfile:
+            testSet = getDataset(testfile,BASEPATH)
+            if testSet == 0 or testSet == -1: 
+                printErr("Error while loading test set: " + str(testfile))
+                return
+            liveTest(model,testSet)
+        else:
+            if qry(LABELS_TESTSET + " will be used. It\'s ok?"):
+                testSet = getDataset(LABELS_TESTSET,BASEPATH)
+                if testSet == 0 or testSet == -1: 
+                    printErr("Error while loading test set: " + str(testfile))
+                    return
+                liveTest(model,testSet)
             else: return
     def do_dlr(self,lr):
         global dlr, lrf, everyepoch

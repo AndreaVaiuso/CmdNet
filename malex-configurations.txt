@@ -1,0 +1,36 @@
+Config 1:
+
+18 epoche
+Lr 0.01 * 0.5 ogni 6
+Bsize 64
+Momentum 0.9
+wdecay 0.0005
+
+TRAIN	TEST	ACC
+
+UPFR04	UPFR04	99.54%
+UPFR04	UPFR05	93.29%
+UPFR04	PUC	98.27%
+
+UPFR05	UPFR04	93.69%
+UPFR05	UPFR05	99.49%
+UPFR05	PUC	92.72%
+
+PUC	UPFR04	98.03%
+PUC	UPFR05	96.00%
+PUC	PUC	99.90%
+
+--------------------------
+Config 2:
+
+6 epoche
+Lr 0.0008 * 0.75 ogni 2
+Bsize 64
+Momentum 0.9
+wdecay 0.0005
+
+TRAIN	TEST	ACC
+
+CNRx-TR	CNRx-TS	97.71%
+CNRx-TR	PKLOT	84.53%
+
