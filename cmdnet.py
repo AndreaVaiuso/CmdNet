@@ -1,4 +1,6 @@
-VERSION = "1.0.4.4"
+#!/usr/bin/env python3
+
+VERSION = "1.0.4.5"
 
 from utilities import isBoolean, listFileInDir, summarizeAccuracy, summarizeLoss, qry, toBool, imgpad, secToTime
 from keras.backend import int_shape
@@ -821,11 +823,12 @@ class CmdParse(cmd.Cmd):
         commands.append(line)
 
 def main():
-    mname = sys.argv[1]
     os.system("clear")
     setSeed(rseed)
     parser = CmdParse()
-    parser.do_new(mname,verbose=0)
+    if len(sys.argv)>1:
+        mname = sys.argv[1]
+        parser.do_new(mname,verbose=0)
     parser.cmdloop(intro="CMDNET " + VERSION + " by Andrea Vaiuso")
 
 if __name__ == "__main__":
