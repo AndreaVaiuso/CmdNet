@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-VERSION = "1.0.4.5"
+VERSION = "1.0.4.6"
 
-from utilities import isBoolean, listFileInDir, summarizeAccuracy, summarizeLoss, qry, toBool, imgpad, secToTime
+from utilities import isBoolean, listFileInDir, summarizeAccuracy, summarizeLoss, qry, toBool, imgpad, secToTime, histEq
 from keras.backend import int_shape
 from CNNs import model_VGG16, model_leNet, model_mAlexNet
 from CNNs import model_AlexNet
@@ -68,8 +68,12 @@ class DynamicLR(keras.callbacks.Callback):
             print("Learning rate changed to: ", K.get_value(model.optimizer.learning_rate))
 
 def setLr(lr):
-    K.set_value(model.optimizer.learning_rate, lr)
-    updateLr()
+    try:
+        K.set_value(model.optimizer.learning_rate, lr)
+        updateLr()
+    except:
+        printErr("Unable to change learning rate value!")
+        return
 
 def updateLr():
     global lrate
@@ -108,6 +112,7 @@ mname = "None"
 training_time = 0
 lrate = 0.0008
 edsr = ""
+equalize = 1
 
 first = 1
 original_weights = []
@@ -189,6 +194,7 @@ def getDataset(pathToFile,basepath,verbose = 1,inspect=0,rewrite=0):
 
     acc = 0
     timeindex = 0
+    prev_acc = np.Infinity
     
     for line in lines:
 
@@ -205,6 +211,12 @@ def getDataset(pathToFile,basepath,verbose = 1,inspect=0,rewrite=0):
             file_skipped += 1
             skipped = 1
         else:
+            if equalize: img_array = histEq(img_array)
+            if inspect: 
+                cv2.imshow(pth,img_array)
+                xx = pth.split("/")
+                cv2.waitKey()
+                cv2.imwrite(xx[-1],img_array)
             if img_array.shape != (ROW,COL,CH):
                 if reshaper.mod == "padding":
                     img_array = imgpad(img_array,ROW,COL)
@@ -241,14 +253,24 @@ def getDataset(pathToFile,basepath,verbose = 1,inspect=0,rewrite=0):
             dset.data.append(img_array)
             dset.label.append(int(x[1]))
         loaded_index += 1
+        
         if inspect: 
-            cv2.imshow(pth,img_array)
-            cv2.waitKey()
+                cv2.imshow(pth,img_array)
+                xx = pth.split("/")
+                cv2.waitKey()
+                cv2.imwrite(xx[-1],img_array)
 
         t2 = time.time()
         acc += (t2-t1)
-        if acc >= 10:
-            ETA = secToTime(math.ceil(acc*((loaded_total-loaded_index)/timeindex)))
+        if acc >= 1:
+            eta = math.ceil(acc*((loaded_total-loaded_index)/timeindex))
+            if eta < prev_acc:
+                prev_acc = eta
+                ETA = secToTime(eta)
+            else:
+                neta = (eta - prev_acc)/2
+                prev_acc += neta
+            
             timeindex = 0
             acc = 0
         suf = "loaded: " + str(loaded_index-file_skipped) + "/" + str(loaded_total) + " - skipped: " + str(file_skipped) + " - converted: " + str(file_converted) + " - ETA: " + str(ETA)
@@ -359,9 +381,9 @@ def getSummary():
     resh = ""
     if reshaper.mod == "skip": resh ="No"
     elif reshaper.mod == "padding": resh ="Padding"
-    elif reshaper.mod == "scalepadding": resh ="Scaled - padding"
-    elif reshaper.mod == "EDSR": resh ="Super resolution EDSR"
     elif reshaper.mod == "interpolate": resh="Interpolation: " + interpmod[reshaper.val]
+    elif reshaper.mod == "scalepadding": resh="Scaled - padding: " + interpmod[reshaper.val]
+    elif reshaper.mod.startswith("EDSR"): resh="Super resolution " + reshaper.mod
     smry = "Dataset selected: "+ str(dsname) +"\n"+\
         "Network: " + str(mname) + "\n" +\
         "Network trained: " + str(tr) + "\n" +\
@@ -511,7 +533,7 @@ class CmdParse(cmd.Cmd):
             elif reshaper.mod == "padding": resh ="Padding"
             elif reshaper.mod == "interpolate": resh="Interpolation: " + interpmod[reshaper.val]
             elif reshaper.mod == "scalepadding": resh="Scaled - padding: " + interpmod[reshaper.val]
-            elif reshaper.mod == "EDSR": resh="Super resolution"
+            elif reshaper.mod.startswith("EDSR"): resh="Super resolution " + reshaper.mod
             print("Reshape policy: " + resh)
         else:
             if params[0].lower() == "s" or params[0].lower() == "skip":

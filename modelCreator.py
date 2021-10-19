@@ -1,4 +1,4 @@
 import CNNs
 
-model1 = CNNs.model_mAlexNetPlus()
-model1.save("MODELS/malexPlus.h5")
+model1 = CNNs.model_SqueezeNet()
+model1.save("MODELS/sqnet.h5")

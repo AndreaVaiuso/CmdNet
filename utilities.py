@@ -4,6 +4,11 @@ import os
 import cv2
 import math
 
+def histEq(rgb_img):
+  ycrcb_img = cv2.cvtColor(rgb_img, cv2.COLOR_BGR2YCrCb)
+  ycrcb_img[:, :, 0] = cv2.equalizeHist(ycrcb_img[:, :, 0])
+  return cv2.cvtColor(ycrcb_img, cv2.COLOR_YCrCb2BGR)
+
 def toBool(val):
   if val == "1" or val.lower() == "true" or val.lower() == "y" or val.lower() == "yes" or val.lower() == "t": return 1
   if val == "0" or val.lower() == "false" or val.lower() == "n" or val.lower() == "no" or val.lower() == "f": return 0
