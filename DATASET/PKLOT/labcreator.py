@@ -19,7 +19,7 @@ def createlab(pth):
         for dirdate in dirs2:
             try:
                 date += 1
-                if date < 2 and date > 4: continue
+                if date != 3: continue
                 else:
                     dirs3 = os.listdir(os.path.join(pth,dir,dirdate))
             except NotADirectoryError as ndex:
