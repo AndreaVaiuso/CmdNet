@@ -2,7 +2,7 @@
 
 VERSION = "1.0.4.6"
 
-from utilities import isBoolean, listFileInDir, summarizeAccuracy, summarizeLoss, qry, toBool, imgpad, secToTime, histEq
+from utilities import isBoolean, listFileInDir, summarizeAccuracy, summarizeLoss, qry, toBool, imgpad, secToTime, histEq, printErr, bcolors
 from keras.backend import int_shape
 from CNNs import model_VGG16, model_leNet, model_mAlexNet
 from CNNs import model_AlexNet
@@ -24,16 +24,7 @@ import cmd
 import random
 import math
 
-class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
+
 
 class Dataset:
     def  __init__(self,data,label):
@@ -125,9 +116,6 @@ early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=4
 time_callback = TimeHistory()
 dynamicTrain = DynamicLR(everyepoch,lrf)
 reshaper = Reshaper("skip",cv2.INTER_CUBIC)
-
-def printErr(strg):
-    print(bcolors.FAIL + str(strg) + bcolors.ENDC)
 
 
 def setDynamicLr():
