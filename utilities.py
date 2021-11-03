@@ -15,6 +15,30 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+def darker(color):
+    r,g,b,a = color
+    return (r-50,g-50,b-50,a)
+
+def getFName(name):
+    n = name.split(".")
+    text = ""
+    i = 0
+    for i in range(len(n)):
+        if i == len(n)-2:
+            text += n[i]
+            return text
+        else:
+            text += n[i] + "."
+
+def weightedMean(val,w):
+    i = 0
+    num = 0
+    den = 0
+    for i in range(len(val)):
+        num += val[i] * w[i]
+        den += w[i]
+    return num/den
+
 def printErr(strg):
     print(bcolors.FAIL + str(strg) + bcolors.ENDC)
 
