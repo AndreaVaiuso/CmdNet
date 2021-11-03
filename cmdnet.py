@@ -815,13 +815,12 @@ class CmdParse(cmd.Cmd):
         "FPR: " + str(fpr) + "\n" 
         results += _res
         print("\n\n",results)
-        if qry("Save run results? "):
-            dateTimeObj = datetime.now()
-            timestampStr = dateTimeObj.strftime("%d_%b_%Y(%H:%M:%S.%f)")
-            filename = "RUN_"+mname+"_"+timestampStr+".log"
-            with open("RUN/RESULT/"+filename, "x") as text_file:
-                text_file.write(getSummary()+"\n"+results)
-                print("Results saved as: ", filename)
+        dateTimeObj = datetime.now()
+        timestampStr = dateTimeObj.strftime("%d_%b_%Y(%H:%M:%S.%f)")
+        filename = "RUN_"+mname+"_"+timestampStr+".log"
+        with open("RUN/RESULT/"+filename, "x") as text_file:
+            text_file.write(getSummary()+"\n"+results)
+            print("Results saved as: ", filename)
     def do_quit(self,line):
         sys.exit()
     def do_exit(self,line):
