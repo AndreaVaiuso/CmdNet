@@ -1,27 +1,38 @@
 import cv2
 import os
 import sys
-import numpy as np
 import xml.etree.ElementTree as ET
 import keras
 import json
 import datetime
 import time
+import numpy
+import PIL
 
 from utilities import secToTime, darker, weightedMean, getFName
 from tensorflow.python.eager.context import num_gpus
 import classifier
 from utilities import printErr
 from threading import Thread
+from skimage import io
+from io import BytesIO
+
 
 CLASSIFIER = "NETWORK/malexcnr.keras"
 IMG_FORMAT = ".jpg"
-TOL = 15
+
+TOL = 0.15
+a = -100
+b = 100
 
 FONT_COLOR = (255,255,255)
 FONT = cv2.FONT_HERSHEY_SIMPLEX
 FONT_SCALE = 0.4
 LINE_TYPE = 1
+
+OCCUPIED_COLOR = (0, 0, 255, 200)
+FREE_COLOR = (0, 255, 0, 200)
+UNCERTAIN_COLOR = (20, 20, 20, 200)
 
 prediction_results = {}
 
@@ -47,29 +58,26 @@ class Patch:
         self.y1 = y1
         self.y2 = y2
 
-def updatePatches(imgdirs:list,imgpath:str,patches:list):
+def updatePatches(imgdirs:list,imgpath:str,patches:list) -> "tuple[list,dict]":
     """Update all image data for each patch in patches list
     :param imgdirs: List containing all image file names of all frames to be update
     :param imgpath: Path that contains all image files
-    :param patches: List of patch list. Every patch list contains all patches of a single parking spot from all different parking lot source image:
-    :return: Updated patches list
-    :rtype: list
+    :param patches: List of patch list. Every patch list contains all patches of a single parking spot from all different parking lot source image.
+    :return: Updated patches list and image dictionary
     """
-    imgArrays = {}
-    for imgfile in imgdirs:
-        imgArrays[imgfile] = cv2.imread(imgpath+"/"+imgfile)
+    imgArrays = readImgs(imgdirs,imgpath)
+    
     for patchList in patches:
         for patch in patchList:
             if imgArrays[patch.imsource] is None: continue
             patch.imgArray = imgArrays[patch.imsource][patch.y1:patch.y2,patch.x1:patch.x2]
-    return patches
+    return patches, imgArrays
 
-def addToPatches(patches:list,ptc:Patch):
+def addToPatches(patches:list,ptc:Patch) -> list:
     """Add a single patch to the list of patches list
-    :param patches: List of patch list. Every patch list contains all patches of a single parking spot from all different parking lot source image:
+    :param patches: List of patch list. Every patch list contains all patches of a single parking spot from all different parking lot source image.
     :param ptc: Single patch to be added to the list of patches list
     :return: Updated patches list
-    :rtype: list
     """
     for patchList in patches:
         if patchList[0].name == ptc.name:
@@ -82,15 +90,14 @@ def addToPatches(patches:list,ptc:Patch):
     patches.append([ptc])
     return patches  
 
-def setConfidence(patches:list,camname:str,parkname:str,factor:float):
+def setConfidence(patches:list,camname:str,parkname:str,factor:float) -> list:
     """Set the confidence value for a patch in its own patch list (All patches of a single parking lot from all different parking lot image sources).
     The confidence value resulted is the multiplication of the old value times factor value.
     At the end, all confidence value are normalized in range 0 - 1.
-    :param patches: List of patch list. Every patch list contains all patches of a single parking spot from all different parking lot source image:
+    :param patches: List of patch list. Every patch list contains all patches of a single parking spot from all different parking lot source image.
     :param camname: Image file name (without extension) that produce the patch of that parking lot
     :parkname: Name parameter of :class:'Patch' corresponding to the park lot
     :return: Updated patches list
-    :rtype: list
     """
     for patchlist in patches:
         confs = []
@@ -112,15 +119,23 @@ def setConfidence(patches:list,camname:str,parkname:str,factor:float):
             else: patch.confidence = patch.confidence*factor
     return patches
 
+def swap(a,b):
+    a = t
+    a = b
+    b = t
+    return a,b
+
 def classify(model:keras.Model, shape:tuple, patches:list,verbose:int=0) -> dict:
+    global a,b
     """From patches list, the method classify produces the classification output for each patch weighted for each confidence value.
-    :param tuple:
-    :param shape:
-    :param patches: List of patch list. Every patch list contains all patches of a single parking spot from all different parking lot source image:
-    :param verbose: Single patch to be added to the list of patches list
-    :return: 
-    :rtype: 
+    :param model: The trained Keras classificator model able to do the parking classification
+    :param shape: Image input shape as input of classificator (Example: (150,150,3) for 150x150 pixel RGB images)
+    :param patches: List of patch list. Every patch list contains all patches of a single parking spot from all different parking lot source image.
+    :param verbose: 0 or 1 if printing classification result is needed
+    :return: Dictionary cointains for each park ID (key) the classification value (value) between a=-100 and b=100 (global default values)
     """
+    if a > b: a,b = swap(a,b)
+    if a==b: b += 1
     predResult = {}
     timeForClassific = 0
     for plist in patches:
@@ -130,8 +145,9 @@ def classify(model:keras.Model, shape:tuple, patches:list,verbose:int=0) -> dict
         for patch in plist:
             prediction, timeReq = classifier.classify(model,shape,patch.imgArray)
             timeForClassific += timeReq
-            pred = (prediction[0][0] - 0.5) * 2
-            pred = pred * 100
+            factor = b - a
+            transl = a + (factor/2)
+            pred = (prediction[0][0] - 0.5 + transl) * factor
             result = ""
             if pred > 0: result = "free"
             else: result = "occupied"
@@ -145,7 +161,7 @@ def classify(model:keras.Model, shape:tuple, patches:list,verbose:int=0) -> dict
         print()
         for parking in predResult:
             result = ""
-            if predResult[parking] > 0: result = "free"
+            if predResult[parking] > (b-a)/2: result = "free"
             else: result = "occupied"
             classifResult = "{:.2f}% ".format(abs(predResult[parking])) + result
             if verbose: print(patches[i][0].name,classifResult,"[",str(len(patches[i])),"cameras ]")
@@ -153,28 +169,34 @@ def classify(model:keras.Model, shape:tuple, patches:list,verbose:int=0) -> dict
     print("Refresh rate:",secToTime(timeForClassific),end="\r",flush=True)
     return predResult
 
-def createOverlay(imgArrayList:dict,patches:list,preds:dict,showImgList:list=[]):
-    red_color = (0, 0, 255, 200)
-    green_color = (0, 255, 0, 200)
-    black_color = (20, 20, 20, 200)
-    for imgArray in imgArrayList:
-        rgb_data = imgArrayList[imgArray]
+def createOverlay(imgDictionary:dict,patches:list,preds:dict,showImgList:list=[],postfix:str="%"):
+    """From the full image dictionary, patch list and prediction creates the output image as sum of original image and a box overlay.
+    Each patch match a green box (if parking is free), a red box (if parking is occupied) or a black box if the classification is between a treshold value (golbal TOL variable).
+    Every box carry the classification value inside.
+    :param imgDictionary: original full park lot image dictionary
+    :param patches: List of patch list. Every patch list contains all patches of a single parking spot from all different parking lot source image
+    :param preds: Dictionary cointains for each park ID (key) the classification value (value) between a=-100 and b=100 (global default values)
+    :param showImgList: List of names of the images to be shown during prediction with overlay applied. If image name is wrong program simply will not show it.
+    :param postfix: A string applied at the end of classification result printed onto classification box
+    """
+    for imgArray in imgDictionary:
+        rgb_data = imgDictionary[imgArray]
         rgba = cv2.cvtColor(rgb_data, cv2.COLOR_RGB2RGBA)
-        imgArrayList[imgArray] = rgba
-    for imfile in imgArrayList:
-        img = imgArrayList[imfile]
+        imgDictionary[imgArray] = rgba
+    for imfile in imgDictionary:
+        img = imgDictionary[imfile]
         for parkingPatches in patches:
             for patch in parkingPatches:
                 if patch.imsource == imfile:
                     result = preds[patch.name]
-                    if result>TOL:
-                        color = green_color
-                    elif result<-TOL: 
-                        color = red_color
+                    if result> ((b-a)/2) + (b - a)*TOL:
+                        color = FREE_COLOR
+                    elif result< ((b-a)/2) - (b - a)*TOL: 
+                        color = OCCUPIED_COLOR
                     else: 
-                        color = black_color
+                        color = UNCERTAIN_COLOR
                     _x, _y = (patch.x1+5,patch.y2-5)
-                    text = "{:.0f}% ".format(abs(result))
+                    text = "{:.0f}".format(abs(result))+postfix
                     text_size, _ = cv2.getTextSize(text, FONT, FONT_SCALE, LINE_TYPE)
                     text_w, text_h = text_size
                     cv2.rectangle(img, (_x-2,_y+2), ((_x + text_w), (_y - text_h)), darker(color), -1)
@@ -187,43 +209,79 @@ def createOverlay(imgArrayList:dict,patches:list,preds:dict,showImgList:list=[])
                     cv2.rectangle(img,(patch.x1,patch.y1),(patch.x2,patch.y2),color,3) 
         res = img
         cv2.imwrite("OUTPUTS/overlay_"+imfile,res)
-        imgArrayList[imfile] = res
+        imgDictionary[imfile] = res
     for outfile in showImgList:
         try:
-            outimg = imgArrayList[outfile]
+            outimg = imgDictionary[outfile]
         except KeyError:
             continue
         cv2.imshow("Overlay " + outfile,outimg)
         cv2.waitKey(1)
 
-def listFiles(path:str,ext:str):
+
+def listFiles(path:str,ext:str) -> list:
+    """List files contained in the specified directory that match the specified extension
+    :param path: Directory path
+    :param ext: File extension
+    :return: List of files with that extension
+    """
     filelist = []
     for file in os.listdir(path):
         if file.endswith(ext):
             filelist.append(file)
     return filelist
 
-def readImgs(path:str,imgfiles:list):
-    imgArrayList = {}
+def readImgs(imgfiles:list,imgpath:str) -> dict:
+    imgDictionary = {}
+    """Get image pixel matrix from a list of files. If image file get a premature end the function keep trying reading image until image is readable
+    :param imgfiles: List of image file names to be loaded
+    :param imgpath: Path of image files 
+    :return: Dictionary of image files (name: key) containing the pixel matrix of each image (value)
+    """
     for imgfile in imgfiles:
-        imgArrayList[imgfile] = cv2.imread(path+"/"+imgfile)
-    return imgArrayList
+        img = None
+        while True:
+            try:
+                with open(imgpath+"/"+imgfile, 'rb') as img_bin:
+                    buff = BytesIO()
+                    buff.write(img_bin.read())
+                    buff.seek(0)
+                    temp_img = numpy.array(PIL.Image.open(buff), dtype=numpy.uint8)
+                    img = cv2.cvtColor(temp_img, cv2.COLOR_RGB2BGR)
+                if img is not None:
+                    break
+            except OSError:
+                continue
+        imgDictionary[imgfile] = img
 
-def parseRoots(path:str,xmlfiles:list):
+    return imgDictionary
+
+def parseRoots(xmlfiles:list,path:str)-> dict:
+    """Get patch children defined in a list of XML files
+    :param xmlfiles: List of XML file names to be parsed
+    :param path: Path of XML files
+    :return: Dictionary of XML files (name: key) containing the parsed root of each patch (value). 
+    Same parking spots of different XML files should share the same parking ID.
+    """
     xmlRoots = {}
     for xmlfile in xmlfiles:
         xmlRoots[xmlfile] = ET.parse(path+"/"+xmlfile).getroot()
     return xmlRoots
 
-def createPatches(xmlRoots:list,imgArrayList:dict):
+def createPatches(xmlRoots:dict,imgDictionary:dict):
+    """Initialize patches defined in the XML files and create a list of patch list: every member of the list represents all parking patch taken from different images.
+    :param xmlRoots: Dictionary of XML files (name: key) containing the parsed root of each patch (value)
+    :param imgDictionary: Dictionary of image files (name: key) containing the pixel matrix of each image (value)
+    :return: List of patch list. Every patch list contains all patches of a single parking spot from all different parking lot source image
+    """
     filelist = []
     patches = []
     for xmlfile in xmlRoots:
         filelist.append(getFName(xmlfile))
     for file in filelist:
         try:
-            xmlElement = xmlRoots[file+".xml"]
-            imgArray = imgArrayList[file+IMG_FORMAT]
+            _ = xmlRoots[file+".xml"]
+            _ = imgDictionary[file+IMG_FORMAT]
         except KeyError:
             printErr("Cannot initialize patches because is not possible to match img files with corrispondent xml files\n"+
                 + "Please be sure that xmls has the same names of img files. Image file format requested: " + IMG_FORMAT)
@@ -242,34 +300,61 @@ def createPatches(xmlRoots:list,imgArrayList:dict):
                     y1 = int(patch.text)
                 if patch.tag == "Y2":
                     y2 = int(patch.text)
-            fullimg = imgArrayList[file+IMG_FORMAT]
+            fullimg = imgDictionary[file+IMG_FORMAT]
             ptc = Patch(patchname,fullimg[y1:y2,x1:x2],file+IMG_FORMAT,x1,x2,y1,y2)
             patches = addToPatches(patches,ptc)
     return patches
 
-def initialize():
+def initialize()->"tuple(list,str,keras.Model,tuple,dict,list,list)":
+    """Parse main params: arg 1 is the path containing XML patch file, arg 2 is the path containing correspondent images, arg 3 is the list of images to show with classification overlay.
+    :return: List of image file names, image path containing these images, Keras trained classificator model, image shape requested, image dictionary, list of image to show, list of patches list
+    """
     xmlpath = sys.argv[1]
     imgpath = sys.argv[2]
+    if (xmlpath is None) or (imgpath is None) :
+        print("Usage: pkspot.py [XMLPATH] [IMGPATH] [LIST OF IMAGE NAMES TO SHOW OVERLAY] ...")
+        sys.exit(1)
     imgsToShow = []
     for i in range(3,len(sys.argv)):
         imgsToShow.append(sys.argv[i])
-    print(imgsToShow)
     xmlfiles = listFiles(xmlpath,".xml")
     imgfiles = listFiles(imgpath,IMG_FORMAT)
-    imgArrayList = readImgs(imgpath,imgfiles)
-    xmlRoots = parseRoots(xmlpath,xmlfiles)
-    patches = createPatches(xmlRoots,imgArrayList)
+    imgDictionary = {}
+    x = 1
+    while(x):
+        try:
+            imgDictionary = readImgs(imgfiles,imgpath)
+            x = 0
+        except ValueError:
+            continue
+    xmlRoots = parseRoots(xmlfiles,xmlpath)
+    patches = createPatches(xmlRoots,imgDictionary)
     model, shape = classifier.loadModel(CLASSIFIER)
-    return imgfiles, imgpath, model, shape, imgArrayList, imgsToShow,patches
+    return imgfiles, imgpath, model, shape, imgDictionary, imgsToShow,patches
 
-def livePrediction(imgfiles:list,imgpath:str,model:keras.Model,shape:tuple,imgArrayList:dict,imgsToShow:list,patches:dict):
+def livePrediction(imgfiles:list,imgpath:str,model:keras.Model,shape:tuple,imgDictionary:dict,imgsToShow:list,patches:list):
+    """Start the prediction cycle
+    :param imgfiles: List of image file names to be loaded
+    :param imgpath: Path of image files
+    :param model: The trained Keras classificator model able to do the parking classification
+    :param shape: Image input shape as input of classificator (Example: (150,150,3) for 150x150 pixel RGB images)
+    :param imgDictionary: Dictionary of image files (name: key) containing the pixel matrix of each image (value)
+    :param imgsToShow: List of names of the images to be shown during prediction with overlay applied. If image name is wrong program simply will not show it.
+    :param patches: List of patch list. Every patch list contains all patches of a single parking spot from all different parking lot source image
+    """
     global prediction_results
     while True:
-        patches = updatePatches(imgfiles,imgpath,patches)
-        prediction_results = classify(model, shape, patches)
-        createOverlay(imgArrayList,patches,prediction_results,showImgList=imgsToShow)
+        try:
+            patches, imgDictionary = updatePatches(imgfiles,imgpath,patches)
+            prediction_results = classify(model, shape, patches)
+            createOverlay(imgDictionary,patches,prediction_results,showImgList=imgsToShow)
+        except ValueError:
+            continue
 
-def storePrediction(time_interval:int=5):
+def storePrediction(time_interval:int=900):
+    """Store prediction dictionary as JSON. Every json is stored every fixed amount of time and categorized by date and time
+    :param time_interval: Fixed dumping time in second (default 900s : 15 mins)
+    """
     time.sleep(10)
     global prediction_results
     while True:
@@ -290,10 +375,10 @@ def storePrediction(time_interval:int=5):
 
 if __name__ == "__main__":
     #RULES: The name of XML file must match the name of image file
-    imgfiles,imgpath,model,shape,imgArrayList,imgsToShow,patches = initialize()
+    imgfiles,imgpath,model,shape,imgDictionary,imgsToShow,patches = initialize()
     t = Thread(target=storePrediction, args=())
     t.start()
-    livePrediction(imgfiles,imgpath,model,shape,imgArrayList,imgsToShow,patches)
+    livePrediction(imgfiles,imgpath,model,shape,imgDictionary,imgsToShow,patches)
     
     
 
